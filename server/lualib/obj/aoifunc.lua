@@ -62,7 +62,7 @@ function _aoifun.expandmethod(obj)
     -- 设置aoi mode
     function obj:setaoimode(mode)
         assert(type(mode) == "string")
-        self.aoiobj.mode = mode
+        self.aoiobj.movement.mode = mode
     end
 
     -- 设置角色临时id

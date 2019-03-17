@@ -197,6 +197,10 @@ function sendrequest(name, args, ref, not_send_to_me, fdlist)
     end
 end
 
+skynet.info_func(function()
+    return "aoilist:"..table.size(user.character:getaoilist())
+end)
+
 skynet.start(
     function()
         -- If you want to fork a work thread , you MUST do it in CMD.login

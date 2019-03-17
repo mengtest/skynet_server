@@ -191,7 +191,7 @@ function RESPONSE:charactercreate(args)
 end
 
 function RESPONSE:characterpick(args)
-    log.debug("characterpick ret:" .. args.tempid)
+    log.debug("characterpick ret tempid: " .. args.tempid)
     mapready(self)
 end
 
