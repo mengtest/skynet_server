@@ -171,7 +171,7 @@ function CMD.close()
     skynet.exit()
 end
 
-skynet.memlimit(1 * 1024 * 1024)
+--skynet.memlimit(1 * 1024 * 1024)
 
 -- 发送广播消息给client
 -- 消息名，参数列表，是否发送给指定对象，是否广播，广播时是否排除自己

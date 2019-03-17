@@ -226,8 +226,9 @@ end
 
 -- aoi回调
 function CMD.aoicallback(w, m)
-    assert(OBJ[w], w)
-    assert(OBJ[m], m)
+    if OBJ[w] == nil or OBJ[m] == nil then return end
+    --assert(OBJ[w], w)
+    --assert(OBJ[m], m)
 
     if playerview[OBJ[w].tempid] == nil then
         playerview[OBJ[w].tempid] = {}

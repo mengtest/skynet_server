@@ -17,13 +17,13 @@ function _aoifun.expandmethod(obj)
 
     -- 更新对象的aoiobj信息
     function obj:updateaoiobj(aoiobj)
-        assert(self.aoilist[aoiobj.tempid], aoiobj.tempid)
+        --assert(self.aoilist[aoiobj.tempid], aoiobj.tempid)
         self.aoilist[aoiobj.tempid] = aoiobj
     end
 
     -- 添加对象到aoilist
     function obj:addtoaoilist(aoiobj)
-        assert(self.aoilist[aoiobj.tempid] == nil, aoiobj.tempid)
+        --assert(self.aoilist[aoiobj.tempid] == nil, aoiobj.tempid)
         self.aoilist[aoiobj.tempid] = aoiobj
     end
 
