@@ -23,12 +23,12 @@ function CMD.addaoiobj(_, aoiobj)
     if not user.character:getfromaoilist(aoiobj.tempid) then
         user.character:addtoaoilist(aoiobj)
         if aoiobj.type == enumtype.CHAR_TYPE_PLAYER then
+            -- 对方是玩家的时候，将我的信息发送给对方
             local info = {
                 name = user.character:getname(),
                 tempid = user.character:gettempid(),
                 pos = user.character:getpos()
             }
-            -- 将我的信息发送给对方
             user.sendrequest(
                 "characterupdate",
                 {
@@ -92,6 +92,7 @@ function CMD.updateaoilist(_, enterlist, leavelist)
             end
         end
     end
+
     local leaveid = {}
     for _, v in pairs(leavelist) do
         for _, vv in pairs(v) do

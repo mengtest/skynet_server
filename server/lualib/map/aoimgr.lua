@@ -62,66 +62,72 @@ local function updateviewplayer(viewertempid)
     local otherobj
     -- 遍历视野中的对象
     for k, v in pairs(playerview[viewertempid]) do
-        othertempid = OBJ[k].tempid
-        otherpos = OBJ[k].movement.pos
-        othertype = OBJ[k].type
-        otherobj = {
-            tempid = othertempid,
-            agent = OBJ[k].agent
-        }
-        -- 计算对象之间的距离
-        local distance = DIST2(mypos, otherpos)
-        if distance <= AOI_RADIS2 then
-            -- 在视野范围内的时候
-            if not v then
-                -- 之前不在视野内，加入进入视野列表
-                playerview[viewertempid][k] = true
-                if othertype ~= enumtype.CHAR_TYPE_PLAYER then
-                    monsterview[k][viewertempid] = true
-                    table.insert(enterlist.monsterlist, OBJ[k])
-                else
-                    playerview[k][viewertempid] = true
-                    table.insert(enterlist.playerlist, OBJ[k])
-                end
-            else
-                -- 在视野内，更新坐标
-                inserttotablebytype(movelist, otherobj, othertype)
-            end
-        elseif distance > AOI_RADIS2 and distance <= LEAVE_AOI_RADIS2 then
-            -- 视野范围外，但是还在aoi控制内
-            if v then
-                -- 之前在视野内的话，加入离开视野列表
-                playerview[viewertempid][k] = false
-                if othertype ~= enumtype.CHAR_TYPE_PLAYER then
-                    monsterview[k][viewertempid] = false
-                    table.insert(leavelist.monsterlist, otherobj)
-                else
-                    playerview[k][viewertempid] = false
-                    table.insert(leavelist.playerlist, otherobj)
-                end
-            end
-        else
-            -- aoi控制外
-            if v then
-                -- 之前在视野内的话，加入离开视野列表
-                inserttotablebytype(leavelist, otherobj, othertype)
-            end
+        if OBJ[k] == nil then
             playerview[viewertempid][k] = nil
-            -- 从对方视野中移除自己
-            if othertype ~= enumtype.CHAR_TYPE_PLAYER then
-                monsterview[k][viewertempid] = nil
+        else
+            othertempid = OBJ[k].tempid
+            otherpos = OBJ[k].movement.pos
+            othertype = OBJ[k].type
+            otherobj = {
+                tempid = othertempid,
+                agent = OBJ[k].agent
+            }
+            -- 计算对象之间的距离
+            local distance = DIST2(mypos, otherpos)
+            if distance <= AOI_RADIS2 then
+                if not v then
+                    -- 不在视野范围内，加入进入视野列表
+                    playerview[viewertempid][k] = true
+                    if othertype ~= enumtype.CHAR_TYPE_PLAYER then
+                        -- 怪物、NPC视野
+                        monsterview[k][viewertempid] = true
+                        table.insert(enterlist.monsterlist, OBJ[k])
+                    else
+                        -- 玩家视野
+                        playerview[k][viewertempid] = true
+                        table.insert(enterlist.playerlist, OBJ[k])
+                    end
+                else
+                    -- 在视野内，更新坐标
+                    inserttotablebytype(movelist, otherobj, othertype)
+                end
+            elseif distance > AOI_RADIS2 and distance <= LEAVE_AOI_RADIS2 then
+                -- 视野范围外，但是还在aoi控制内
+                if v then
+                    -- 之前在视野内的话，加入离开视野列表
+                    playerview[viewertempid][k] = false
+                    if othertype ~= enumtype.CHAR_TYPE_PLAYER then
+                        monsterview[k][viewertempid] = false
+                        table.insert(leavelist.monsterlist, otherobj)
+                    else
+                        playerview[k][viewertempid] = false
+                        table.insert(leavelist.playerlist, otherobj)
+                    end
+                end
             else
-                playerview[k][viewertempid] = nil
+                -- aoi控制外
+                if v then
+                    -- 之前在视野内的话，加入离开视野列表
+                    inserttotablebytype(leavelist, otherobj, othertype)
+                end
+                playerview[viewertempid][k] = nil
+                -- 从对方视野中移除自己
+                if othertype ~= enumtype.CHAR_TYPE_PLAYER then
+                    monsterview[k][viewertempid] = nil
+                else
+                    playerview[k][viewertempid] = nil
+                end
             end
         end
     end
 
+    -- 先通知对方
     -- 离开他人视野
     for _, v in pairs(leavelist.playerlist) do
         skynet.send(v.agent, "lua", "delaoiobj", viewertempid)
     end
 
-    -- 重新进入视野
+    -- 进入视野
     for _, v in pairs(enterlist.playerlist) do
         skynet.send(v.agent, "lua", "addaoiobj", myobj)
     end
@@ -132,10 +138,8 @@ local function updateviewplayer(viewertempid)
     end
 
     -- 怪物的更新合并一起发送
-    if
-        not table.empty(leavelist.monsterlist) or not table.empty(enterlist.monsterlist) or
-            not table.empty(movelist.monsterlist)
-     then
+    if not table.empty(leavelist.monsterlist) or not table.empty(enterlist.monsterlist) or
+        not table.empty(movelist.monsterlist) then
         local monsterenterlist = {
             obj = myobj,
             monsterlist = enterlist.monsterlist
@@ -151,7 +155,7 @@ local function updateviewplayer(viewertempid)
         CMD.updatemonsteraoiinfo(monsterenterlist, monsterleavelist, monstermovelist)
     end
 
-    -- 通知自己
+    -- 再通知自己
     skynet.send(myobj.agent, "lua", "updateaoilist", enterlist, leavelist)
 end
 
@@ -235,12 +239,17 @@ function CMD.aoicallback(w, m)
     end
     playerview[OBJ[w].tempid][OBJ[m].tempid] = true
 
-    -- 怪物视野内的玩家
+    -- 被看到的对象不是玩家时，添加视野到被看到的对象
     if OBJ[m].type ~= enumtype.CHAR_TYPE_PLAYER then
         if monsterview[OBJ[m].tempid] == nil then
             monsterview[OBJ[m].tempid] = {}
         end
         monsterview[OBJ[m].tempid][OBJ[w].tempid] = true
+    else
+        if playerview[OBJ[m].tempid] == nil then
+            playerview[OBJ[m].tempid] = {}
+        end
+        playerview[OBJ[m].tempid][OBJ[w].tempid] = true
     end
 
     -- 通知agent
@@ -273,11 +282,7 @@ function CMD.characterenter(obj)
             skynet.send,
             aoi,
             "text",
-            "update " ..
-                obj.tempid ..
-                    " " ..
-                        obj.movement.mode ..
-                            " " .. obj.movement.pos.x .. " " .. obj.movement.pos.y .. " " .. obj.movement.pos.z
+            "update "..obj.tempid.." "..obj.movement.mode.." ".. obj.movement.pos.x.." "..obj.movement.pos.y .." "..obj.movement.pos.z
         )
     )
     need_update = true
@@ -291,12 +296,10 @@ function CMD.characterleave(obj)
         pcall(
             skynet.send,
             aoi,
-            "text",
-            "update " ..
-                obj.tempid .. " d " .. obj.movement.pos.x .. " " .. obj.movement.pos.y .. " " .. obj.movement.pos.z
+            "text","update "..obj.tempid.." d "..obj.movement.pos.x.." "..obj.movement.pos.y.." ".. obj.movement.pos.z
         )
     )
-    OBJ[obj.tempid] = nil
+
     if playerview[obj.tempid] then
         -- 玩家离开地图
         local monsterleavelist = {
@@ -356,8 +359,13 @@ function CMD.characterleave(obj)
         end
         monsterview[obj.tempid] = nil
     end
+    OBJ[obj.tempid] = nil
     idmgr.releaseid(obj.tempid)
     need_update = true
+end
+
+function CMD.aoiinfo()
+    return "objsize:"..table.size(OBJ)
 end
 
 function aoimgr.update()

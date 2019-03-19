@@ -34,7 +34,7 @@ function _aoifun.expandmethod(obj)
 
     -- 从aoilist中移除对象
     function obj:delfromaoilist(tempid)
-        assert(self.aoilist[tempid], self.aoilist)
+        --assert(self.aoilist[tempid], self.aoilist)
         self.aoilist[tempid] = nil
     end
 

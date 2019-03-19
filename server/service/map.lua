@@ -71,6 +71,10 @@ skynet.init(
     end
 )
 
+skynet.info_func(function()
+    return CMD.aoiinfo()
+end)
+
 skynet.start(
     function()
         skynet.dispatch(
