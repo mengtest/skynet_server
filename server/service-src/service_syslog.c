@@ -49,8 +49,8 @@ syslog_release(struct logger * inst) {
 
 void
 genfilename(struct logger * inst, time_t now) {
-	char filename[64] = {0};
-	char dirname[32] = {0};
+	char filename[128] = {0};
+	char dirname[128] = {0};
 	struct tm tm;
 	localtime_r(&now, &tm);
 	sprintf(dirname, "%s/%d-%d-%d", inst->pathname, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
