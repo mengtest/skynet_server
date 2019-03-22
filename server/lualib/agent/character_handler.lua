@@ -14,6 +14,7 @@ local move_handler = require "agent.move_handler"
 local user
 local dbmgr
 local mapmgr
+local namecheck
 
 local REQUEST = {}
 
@@ -22,7 +23,8 @@ local _handler = handler.new(REQUEST)
 _handler:init(
     function(u)
         user = u
-        dbmgr = skynet.uniqueservice("dbmgr")
+        dbmgr = cluster.proxy("db", "@dbmgr")
+        namecheck = cluster.proxy("db", "@namecheck")
         mapmgr = skynet.uniqueservice("mapmgr")
     end
 )
@@ -84,7 +86,6 @@ function REQUEST.charactercreate(args)
         }
     end
     -- TODO 检查名称的合法性
-    local namecheck = cluster.proxy "login@namecheck"
     local result = skynet.call(namecheck, "lua", "playernamecheck", args.name)
     if not result then
         log.debug("%s create character failed, name repeat!", user.uid)

@@ -25,7 +25,7 @@ function server.auth_handler(token)
     assert(password == "password", "Invalid password")
     log.debug("%s@%s is auth, password is %s", user, server, password)
     if not dbmgrserver then
-        dbmgrserver = skynet.uniqueservice "dbmgr"
+        dbmgrserver = cluster.proxy("db", "@dbmgr")
     end
 
     -- 数据库查询账号信息

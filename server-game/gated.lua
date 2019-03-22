@@ -160,8 +160,6 @@ function server.close_handler()
     log.notice("close gated...")
     -- 这边通知所有服务退出
     skynet.call(mapmgr, "lua", "close")
-    local dbmgr = skynet.uniqueservice "dbmgr"
-    skynet.call(dbmgr, "lua", "system", "close")
 end
 
 -- 向msgserver注册前面server中定义的方法

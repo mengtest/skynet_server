@@ -8,6 +8,7 @@ local character_handler = require "agent.character_handler"
 local map_handler = require "agent.map_handler"
 local aoi_handler = require "agent.aoi_handler"
 local move_handler = require "agent.move_handler"
+local cluster = require "skynet.cluster"
 
 local gate = tonumber(...)
 local luaqueue = queue()
@@ -138,7 +139,7 @@ function CMD.login(source, uid, sid, secret, fd)
         CMD = CMD,
         sendrequest = sendrequest
     }
-    dbmgr = skynet.uniqueservice("dbmgr")
+    dbmgr = cluster.proxy("db", "@dbmgr")
 end
 
 -- gate 通知 agent 认证成功

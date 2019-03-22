@@ -21,10 +21,6 @@ skynet.start(
         local proto = skynet.uniqueservice "protoloader"
         skynet.call(proto, "lua", "load", protopatch)
 
-        -- 启动数据库
-        local dbmgr = skynet.uniqueservice "dbmgr"
-        skynet.call(dbmgr, "lua", "system", "open")
-
         -- 启动网关
         local gated = skynet.uniqueservice("gated")
         -- 注册服务名
