@@ -74,6 +74,9 @@ function server.logout_handler(uid, subid, agent)
         msgserver.logout(u.username)
         users[uid] = nil
         username_map[u.username] = nil
+        if loginservice == nil then
+            loginservice = cluster.proxy("login", "@loginservice")
+        end
         skynet.send(loginservice, "lua", "logout", uid, subid)
         table.insert(agentpool, agent)
     end
@@ -116,9 +119,6 @@ function server.register_handler(conf)
     gateip = assert(conf.publicaddress)
     gateport = assert(conf.port)
     servername = assert(conf.servername)
-    -- 向logind发送请求
-    -- 将自己注册到server_list
-    loginservice = cluster.proxy("login", "@loginservice")
     mapmgr = skynet.uniqueservice("mapmgr")
     skynet.call(mapmgr, "lua", "open")
 

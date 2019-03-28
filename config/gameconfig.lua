@@ -11,7 +11,7 @@ config = {
         maxclient = 10000,
         nodelay = true,
         servername = "game0",
-        agentpool = 100
+        agentpool = 10
     },
     game1 = {
         debug_port = 8125,
@@ -22,7 +22,7 @@ config = {
         maxclient = 10000,
         nodelay = true,
         servername = "game1",
-        agentpool = 100
+        agentpool = 10
     }
 }
 

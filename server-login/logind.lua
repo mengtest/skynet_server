@@ -44,6 +44,20 @@ function server.login_handler(server, uid, secret)
     log.notice("%s@%s is login, secret is %s", uid, server, crypt.hexencode(secret))
     -- 校验要登陆的服务器是否存在
     -- gate启动的时候注册到server_list了
+    if server_list[server] == nil then
+        local gated = cluster.proxy(server, "@gated")
+        server_list[server] = gated
+        local ok, userlist = pcall(cluster.call, server, "@gated", "getalluser")
+        if ok then
+            for _uid, _subid in pairs(userlist) do
+                user_online[_uid] = {
+                    address = gated,
+                    subid = _subid,
+                    server = server
+                }
+            end
+        end
+    end
     local gameserver = assert(server_list[server], "Unknown server :" .. server)
     -- only one can login, because disallow multilogin
     local last = user_online[uid]
@@ -67,30 +81,30 @@ end
 
 -- login启动的时候，尝试获取所有gate的地址
 function server.register_gate()
-    local config_name = skynet.getenv "cluster"
-    local tmp = {}
-    if config_name then
-        local f = assert(io.open(config_name))
-        local source = f:read "*a"
-        f:close()
-        assert(load(source, "@" .. config_name, "t", tmp))()
-    end
-    for k, _ in pairs(tmp) do
-        if string.find(k, "game") ~= nil then
-            local gated = cluster.proxy(k, "@gated")
-            server_list[k] = gated
-            local ok, userlist = pcall(cluster.call, k, "@gated", "getalluser")
-            if ok then
-                for uid, _subid in pairs(userlist) do
-                    user_online[uid] = {
-                        address = gated,
-                        subid = _subid,
-                        server = k
-                    }
-                end
-            end
-        end
-    end
+--    local config_name = skynet.getenv "cluster"
+--    local tmp = {}
+--    if config_name then
+--        local f = assert(io.open(config_name))
+--        local source = f:read "*a"
+--        f:close()
+--        assert(load(source, "@" .. config_name, "t", tmp))()
+--    end
+--    for k, _ in pairs(tmp) do
+--        if string.find(k, "game") ~= nil then
+--            local gated = cluster.proxy(k, "@gated")
+--            server_list[k] = gated
+--            local ok, userlist = pcall(cluster.call, k, "@gated", "getalluser")
+--            if ok then
+--                for uid, _subid in pairs(userlist) do
+--                    user_online[uid] = {
+--                        address = gated,
+--                        subid = _subid,
+--                        server = k
+--                    }
+--                end
+--            end
+--        end
+--    end
 end
 
 local CMD = {}
