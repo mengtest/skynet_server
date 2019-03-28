@@ -25,11 +25,22 @@ make linux
 ./*.sh -k
 ```
 
+启动机器人
 ```
-login-run.sh
-game-run.sh
-client.sh 账号 玩家名（没有的时候会创建）
+game-db.sh -D
+login-run.sh -D
+game-run.sh -D
+game-run.1.sh -D
+robot-run.sh -D
 ```
+或者
+```
+Runall.sh
+robot-run.sh -D
+机器人的个数在robot/main.lua中调整
+```
+
+
 
 * 关于make，不同平台请使用不同参数 linux/macosx/freebsd
 
