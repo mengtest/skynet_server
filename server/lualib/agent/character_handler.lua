@@ -3,7 +3,7 @@ local cluster = require "skynet.cluster"
 local handler = require "agent.handler"
 local log = require "base.syslog"
 local uuid = require "uuid"
-local datasheet = require "skynet.datasheet"
+local sharetable = require "skynet.sharetable"
 local packer = require "db.packer"
 local player = require "obj.player"
 
@@ -93,7 +93,7 @@ function REQUEST.charactercreate(args)
             character = nil
         }
     end
-    local obj = datasheet.query "gamedata"
+    local obj = sharetable.query "gamedata"
     local jobdata = obj["job"]
     if jobdata[args.job] == nil then
         log.debug("%s create character failed, job error!", user.uid)

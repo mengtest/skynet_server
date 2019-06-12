@@ -1,6 +1,6 @@
 local skynet = require "skynet"
 local log = require "syslog"
-local datasheet = require "skynet.datasheet"
+local sharetable = require "skynet.sharetable"
 
 local CMD = {}
 local mapinstance = {}
@@ -11,7 +11,7 @@ function CMD.getmapaddressbyid(mapid)
 end
 
 function CMD.open()
-    local obj = datasheet.query "gamedata"
+    local obj = sharetable.query "gamedata"
     local mapdata = obj["map"]
     local n = 1
     while n > 0 do

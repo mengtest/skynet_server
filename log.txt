@@ -61,7 +61,8 @@ cserver那边，虽然launch了2个cserver，但是传入参数的时候，居�
 --addr这个用的是skynet_context中的handle - 1
 
 sharedata改掉，使用最新的datasheet
---都没用了
+--都没用了  ???怎么没用了？
+--改为sharetable了，但是目前这个模块有点问题，不能正确的loadfile，路径问题，但是推荐使用该方法...
 
 学习使用MemoryHook来检查内存，先检查一下内存问题吧。
 

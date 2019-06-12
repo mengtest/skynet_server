@@ -1,6 +1,6 @@
 local skynet = require "skynet"
 local handler = require "agent.handler"
-local datasheet = require "skynet.datasheet"
+local sharetable = require "skynet.sharetable"
 local log = require "base.syslog"
 
 local REQUEST = {}
@@ -31,7 +31,7 @@ _handler:release(
 function REQUEST.enterinstance(args)
     assert(args.instanceid)
     local ok = false
-    local obj = datasheet.query "gamedata"
+    local obj = sharetable.query "gamedata"
     local insatncedata = obj["insatnce"][args.instanceid]
     if insatncedata ~= nil then
         if instanceaddress == nil then

@@ -1,5 +1,5 @@
 local monstermgr = require "map.monstermgr"
-local datasheet = require "skynet.datasheet"
+local sharetable = require "skynet.sharetable"
 
 local createmonstermgr = {}
 
@@ -16,7 +16,7 @@ function createmonstermgr.createmonster()
 end
 
 function createmonstermgr.init(mapname)
-    local obj = datasheet.query "gamedata"
+    local obj = sharetable.query "gamedata"
     monsterlist = obj["createmonster"][mapname]
 end
 
