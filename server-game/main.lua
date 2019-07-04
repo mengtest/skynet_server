@@ -11,7 +11,6 @@ skynet.start(
         config = config[nodename]
         log.debug(nodename .. " Server start")
         profile.start()
-        local t = os.clock()
         -- 启动后台
         skynet.newservice("debug_console", config.debug_port)
 
@@ -30,9 +29,7 @@ skynet.start(
 
         skynet.call(gated, "lua", "open", config)
 
-        local time = profile.stop()
-        local t1 = os.clock()
-        log.debug("start server cost time:" .. time .. "==" .. (t1 - t))
+        log.debug("start server cost time:" .. profile.stop())
         skynet.exit()
     end
 )

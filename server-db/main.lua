@@ -8,7 +8,6 @@ skynet.start(
     function()
         log.debug("DB Server start")
         profile.start()
-        local t = os.clock()
         -- 启动后台
         skynet.newservice("debug_console", config.debug_port)
 
@@ -25,9 +24,7 @@ skynet.start(
         -- 注册节点
         cluster.open("db")
 
-        local time = profile.stop()
-        local t1 = os.clock()
-        log.debug("start server cost time:" .. time .. "==" .. (t1 - t))
+        log.debug("start server cost time:" .. profile.stop())
         skynet.exit()
     end
 )
