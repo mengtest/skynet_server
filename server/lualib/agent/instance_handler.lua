@@ -21,7 +21,7 @@ _handler:release(
     function()
         user = nil
         if instanceaddress ~= nil then
-            skynet.send(instancemgr, "lua", "releaseinstance", instanceaddress)
+            skynet.send(instanceaddress, "lua", "close")
             instanceaddress = nil
         end
     end

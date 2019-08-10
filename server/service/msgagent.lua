@@ -44,9 +44,8 @@ local function logout(type)
     character_handler:unregister(user)
     skynet.send(gate, "lua", "logout", user.uid, user.subid, skynet.self())
     user = nil
-    -- 不退出，在这里清理agent的数据就行了
-    -- 会在gated里面将该agent加到agentpool中
-    -- skynet.exit()
+    
+    skynet.exit()
 end
 
 local traceback = debug.traceback

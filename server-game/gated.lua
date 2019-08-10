@@ -8,7 +8,7 @@ local server = {}
 local users = {}
 local username_map = {}
 local internal_id = 0
-local agentpool = {}
+local agentpool
 local servername
 local mapmgr
 local gateip
@@ -26,14 +26,7 @@ function server.login_handler(uid, secret)
     local id = internal_id -- don't use internal_id directly
     local username = msgserver.username(uid, id, servername)
     -- agent pool
-    local agent
-    if #agentpool == 0 then
-        agent = skynet.newservice("msgagent", skynet.self())
-        log.debug("pool is empty, new agent(:%08X) created", agent)
-    else
-        agent = table.remove(agentpool, 1)
-        log.debug("agent(:%08X) assigned, %d remain in pool", agent, #agentpool)
-    end
+    local agent = skynet.call(agentpool, "lua", "getagent")
 
     local u = {
         username = username,
@@ -78,7 +71,6 @@ function server.logout_handler(uid, subid, agent)
             loginservice = cluster.proxy("login", "@loginservice")
         end
         skynet.send(loginservice, "lua", "logout", uid, subid)
-        table.insert(agentpool, agent)
     end
 end
 
@@ -121,15 +113,12 @@ function server.register_handler(conf)
     servername = assert(conf.servername)
     mapmgr = skynet.uniqueservice("mapmgr")
     skynet.call(mapmgr, "lua", "open")
-
-    local n = assert(conf.agentpool) or 0
-    for _ = 1, n do
-        table.insert(agentpool, skynet.newservice("msgagent", skynet.self()))
-    end
-    log.notice("create %d agent", n)
+    
+    agentpool = skynet.uniqueservice("agentpool")
+    skynet.call(agentpool, "lua", "open", conf.agentpool, skynet.self())
 
     local instancemgr = skynet.uniqueservice("instancemgr")
-    skynet.call(instancemgr, "lua", "open", n)
+    skynet.call(instancemgr, "lua", "open", conf.agentpool)
 end
 
 -- call by msgagent(server send request)
