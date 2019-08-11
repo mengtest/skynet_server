@@ -10,7 +10,7 @@ end
 -- 扩展方法表
 function _aoifun.expandmethod(obj)
     -- 获取obj的agent
-    function obj:getagentid()
+    function obj:getagentaddress()
         assert(self.aoiobj)
         return self.aoiobj.agent
     end

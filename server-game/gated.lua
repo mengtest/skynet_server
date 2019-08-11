@@ -26,7 +26,7 @@ function server.login_handler(uid, secret)
     local id = internal_id -- don't use internal_id directly
     local username = msgserver.username(uid, id, servername)
     -- agent pool
-    local agent = skynet.call(agentpool, "lua", "getagent")
+    local agent = skynet.call(agentpool, "lua", "getagentaddress")
 
     local u = {
         username = username,
