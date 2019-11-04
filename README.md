@@ -1,6 +1,10 @@
 * 编译：
 
 ```
+如果没有安装下面的两个，需要提前安装一下，编译skynet需要
+sudo apt-get install autoconf
+sudo apt-get install libreadline-dev
+
 git clone https://github.com/Ding8222/skynet_test.git
 cd skynet_test
 git submodule update --init
