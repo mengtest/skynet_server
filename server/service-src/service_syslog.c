@@ -8,6 +8,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #define ONE_MB	(1024 * 1024)
 #define DEFAULT_ROLL_SIZE (1024 * ONE_MB)  // 单个文件大小大于xGB的时候新建log文件
@@ -88,7 +89,7 @@ genfilename(struct logger * inst, time_t now) {
 }
 
 bool
-trycreatenewlogfile(struct logger * inst, time_t now){
+trycreate_newlogfile(struct logger * inst, time_t now){
 	if(inst->pathname == NULL)
 		return false;
 
@@ -123,7 +124,7 @@ syslog_cb(struct skynet_context * context, void *ud, int type, int session, uint
 		{
 			struct tm tm;
 			time_t now = time(NULL);
-			if(trycreatenewlogfile(inst, now))
+			if(trycreate_newlogfile(inst, now))
 			{
 				fclose(inst->handle);
 				inst->handle = fopen(inst->filename,"a");
@@ -143,12 +144,52 @@ syslog_cb(struct skynet_context * context, void *ud, int type, int session, uint
 	return 0;
 }
 
+int 
+folder_mkdirs(char *folder_path)
+{	
+	if(!access(folder_path, F_OK)){
+		return 1;
+	}
+
+	char path[256];
+	char *path_buf;
+	char temp_path[256];
+	char *temp;
+	int temp_len;
+	
+	memset(path, 0, sizeof(path));
+	memset(temp_path, 0, sizeof(temp_path));
+	strcat(path, folder_path);
+	path_buf = path;
+
+	while((temp = strsep(&path_buf, "/")) != NULL){
+		temp_len = strlen(temp);	
+		if(0 == temp_len){
+			continue;
+		}
+		strcat(temp_path, "/");
+		strcat(temp_path, temp);
+		printf("temp_path = %s\n", temp_path);
+		if(-1 == access(temp_path, F_OK)){
+			if(-1 == mkdir(temp_path, 0755)){
+				return 2;
+			}
+		}
+	}
+	return 1;
+}
+
 int
 syslog_init(struct logger * inst, struct skynet_context *ctx, const char * parm) {
 	if (parm) {
 		inst->pathname = skynet_malloc(strlen(parm)+1);
 		strcpy(inst->pathname, parm);
-		trycreatenewlogfile(inst, time(NULL));
+		if(1 != folder_mkdirs(inst->pathname))
+		{
+			skynet_free(inst->pathname);
+			return 1;
+		}
+		trycreate_newlogfile(inst, time(NULL));
 		inst->handle = fopen(inst->filename,"a");
 		if (inst->handle == NULL) {
 			skynet_free(inst->filename);

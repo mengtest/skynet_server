@@ -15,32 +15,32 @@ make linux
 
 以前台模式启动
 ```
-./*.sh
+./run.sh server_name
 ```
 用 Ctrl-C 可以退出
 
 以后台模式启动
 ```
-./*.sh -D
+./run.sh server_name -D
 ```
 
 用下列指令可以杀掉后台进程
 ```
-./*.sh -k
+./run.sh server_name -k
 ```
 
 启动机器人
 ```
-game-db.sh -D
-login-run.sh -D
-game-run.sh -D
-game-run.1.sh -D
-robot-run.sh -D
+./run.sh db -D
+./run.sh login -D
+./run.sh game0 -D
+./run.sh game1 -D
+./run.sh robot -D
 ```
 或者
 ```
-Runall.sh
-robot-run.sh -D
+launch_all.sh
+./run.sh robot -D
 机器人的个数在robot/main.lua中调整
 ```
 

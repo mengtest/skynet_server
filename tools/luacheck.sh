@@ -1,4 +1,5 @@
 #!/bin/bash
+cd .. 
 
 for file in `git status -s | awk '{print $2}' | grep '\.lua'`;
 do

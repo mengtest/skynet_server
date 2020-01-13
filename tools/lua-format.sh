@@ -1,4 +1,6 @@
 #! /bin/bash
+cd .. 
+
 function read_dir(){
 for file in `ls $1` #注意此处这是两个反引号，表示运行系统命令
 do
