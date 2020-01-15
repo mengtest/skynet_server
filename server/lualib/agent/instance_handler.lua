@@ -31,8 +31,8 @@ _handler:release(
 function REQUEST.enterinstance(args)
     assert(args.instanceid)
     local ok = false
-    local obj = sharetable.query "gamedata"
-    local insatncedata = obj["insatnce"][args.instanceid]
+    local data = sharetable.query "insatnce"
+    local insatncedata = data[args.instanceid]
     if insatncedata ~= nil then
         if instanceaddress == nil then
             instancemgr = instancemgr or skynet.uniqueservice("instancemgr")

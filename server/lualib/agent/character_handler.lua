@@ -93,8 +93,8 @@ function REQUEST.charactercreate(args)
             character = nil
         }
     end
-    local obj = sharetable.query "gamedata"
-    local jobdata = obj["job"]
+    
+    local jobdata = sharetable.query "job"
     if jobdata[args.job] == nil then
         log.debug("%s create character failed, job error!", user.uid)
         return {

@@ -16,8 +16,8 @@ function createmonstermgr.createmonster()
 end
 
 function createmonstermgr.init(mapname)
-    local obj = sharetable.query "gamedata"
-    monsterlist = obj["createmonster"][mapname]
+    local data = sharetable.query "createmonster"
+    monsterlist = data[mapname]
 end
 
 return createmonstermgr

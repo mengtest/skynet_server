@@ -11,8 +11,7 @@ function CMD.getmapaddressbyid(mapid)
 end
 
 function CMD.open()
-    local obj = sharetable.query "gamedata"
-    local mapdata = obj["map"]
+    local mapdata = sharetable.query "map"
     local n = 1
     while n > 0 do
         for mapid, conf in pairs(mapdata) do

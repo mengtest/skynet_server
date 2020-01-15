@@ -70,13 +70,6 @@ local function handlerequest(name, args, response)
     end
 end
 
--- 接受到的回应
--- 现在不应该收到回应
-local RESPONSE = {}
-local function handle_response(id, args)
-    log.warning("handle_response : %d", id)
-end
-
 -- 处理client发来的消息
 skynet.register_protocol {
     name = "client",
@@ -90,8 +83,6 @@ skynet.register_protocol {
             if result then
                 skynet.ret(result)
             end
-        elseif type == "RESPONSE" then
-            luaqueue(handle_response, ...)
         else
             log.warning("invalid message type : %s", type)
             logout(7)
@@ -134,7 +125,6 @@ function CMD.login(source, uid, sid, secret, fd)
         uid = uid,
         subid = sid,
         REQUEST = {},
-        RESPONSE = {},
         CMD = CMD,
         sendrequest = sendrequest
     }
@@ -146,7 +136,6 @@ function CMD.auth(source, fd)
     user.fd = fd
 
     REQUEST = user.REQUEST
-    RESPONSE = user.RESPONSE
     msgsender.init()
     host = msgsender.gethost()
     -- you may load user data from database
