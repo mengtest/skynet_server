@@ -5,7 +5,7 @@ local user
 local REQUEST = {}
 local CMD = {}
 
-local _handler = handler.new(REQUEST, nil, CMD)
+local _handler = handler.new(REQUEST, CMD)
 
 _handler:init(
     function(u)

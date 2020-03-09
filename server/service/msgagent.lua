@@ -118,8 +118,8 @@ function CMD.save()
 end
 
 -- gate 通知 agent 有玩家正在认证
+-- secret可用于加密
 function CMD.login(source, uid, sid, secret, fd)
-    -- you may use secret to make a encrypted data stream
     log.notice("%s is login", uid)
     user = {
         uid = uid,
@@ -143,14 +143,13 @@ function CMD.auth(source, fd)
     character_handler:register(user)
 end
 
+-- 下线（可以能会重入）
 function CMD.logout(_)
-    -- 下线
-    -- NOTICE: The logout MAY be reentry
     logout(0)
 end
 
+-- 掉线
 function CMD.afk(_)
-    -- the connection is broken, but the user may back
     log.notice("%s AFK", user.uid)
 end
 

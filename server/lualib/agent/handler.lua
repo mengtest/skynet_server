@@ -3,14 +3,13 @@ local mt = {
     __index = handler
 }
 
-function handler.new(request, response, cmd)
+function handler.new(request, cmd)
     return setmetatable(
         {
-            init_func = {},
-            release_func = {},
-            request = request,
-            response = response,
-            cmd = cmd
+            init_func = {},         -- 初始化
+            release_func = {},      -- 释放
+            request = request,      -- 请求
+            cmd = cmd               -- lua调用方法
         },
         mt
     )
@@ -39,7 +38,6 @@ function handler:register(user)
     end
 
     merge(user.REQUEST, self.request)
-    merge(user.RESPONSE, self.response)
     merge(user.CMD, self.cmd)
 end
 
@@ -58,7 +56,6 @@ function handler:unregister(user)
     end
 
     clean(user.REQUEST, self.request)
-    clean(user.RESPONSE, self.response)
     clean(user.CMD, self.cmd)
 end
 

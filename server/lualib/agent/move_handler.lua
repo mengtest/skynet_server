@@ -2,10 +2,9 @@ local skynet = require "skynet"
 local handler = require "agent.handler"
 
 local REQUEST = {}
-local RESPONSE = {}
 local CMD = {}
 
-local _handler = handler.new(REQUEST, RESPONSE, CMD)
+local _handler = handler.new(REQUEST, CMD)
 
 local user
 

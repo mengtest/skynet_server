@@ -3,7 +3,7 @@ local handler = require "agent.handler"
 local skynet = require "skynet"
 
 local CMD = {}
-local _handler = handler.new(nil, nil, CMD)
+local _handler = handler.new(nil, CMD)
 local user
 
 _handler:init(

@@ -131,16 +131,10 @@ function server.send_request_handler(uid, subid, msg)
     end
 end
 
--- 发送同一条消息给多个user
-function server.send_board_request_handler(msg, userlist)
-    for _, v in pairs(userlist) do
-        assert(v.info)
-        local u = users[v.info.uid]
-        if u then
-            local username = msgserver.username(v.info.uid, v.info.subid, servername)
-            assert(u.username == username, "u.username:" .. tostring(u.username) .. " username:" .. tostring(username))
-            msgserver.request(u.username, msg)
-        end
+-- 广播消息给gated上的所有玩家
+function server.send_board_request_handler(msg)
+    for _, v in pairs(users) do
+        msgserver.request(v.username, msg)
     end
 end
 
