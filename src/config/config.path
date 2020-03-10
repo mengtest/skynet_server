@@ -1,15 +1,14 @@
 root = "$ROOT/"
 skynet_path = "3rd/skynet/"
-server_root = "server/"
-server_dir = "server-login/"
+src_root = "src/"
 common = "common/"
 
 
 -- My path
-luaservice = "server/service/?.lua;".."server/lualib/db/?.lua;"
-lua_path = "?.lua;".."server/lualib/?.lua;".."server/lualib/base/?.lua;".."server/lualib/global/?.lua;".."common/?.lua;"
-lua_cpath = "server/luaclib/?.so;"
-cpath = "server/cservice/?.so;"
+luaservice = src_root.."service/?.lua;"..src_root.."lualib/db/?.lua;"
+lua_path = "?.lua;"..src_root.."lualib/?.lua;"..src_root.."lualib/base/?.lua;"..src_root.."lualib/global/?.lua;".."common/?.lua;"
+lua_cpath = src_root.."luaclib/?.so;"
+cpath = src_root.."cservice/?.so;"
 
 -- skynet path
 luaservice = luaservice..skynet_path.."service/?.lua;"
@@ -22,5 +21,5 @@ lua_cpath = lua_cpath.."3rd/lua-cjson/?.so;"
 
 logservice = "syslog"
 lualoader = skynet_path.."lualib/loader.lua"
-preload = server_root.."lualib/global/preload.lua"
+preload = src_root.."lualib/global/preload.lua"
 cluster = "config/cluster/clustername.lua"

@@ -27,4 +27,4 @@ do
 done
 
 
-$ROOT/3rd/skynet/skynet $ROOT/server/config/$name.config
+$ROOT/3rd/skynet/skynet $ROOT/src/config/$name.config
