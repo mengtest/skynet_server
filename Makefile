@@ -54,6 +54,6 @@ clean :
 
 cleanall: clean
 	@$(MAKE) -C $(LUA_CJSON_ROOT) clean --no-print-directory
-	@$(MAKE) -C $(SKYNET_ROOT) clean --no-print-directory
+	@$(MAKE) -C $(SKYNET_ROOT) cleanall --no-print-directory
 
 .PHONY : linux macosx freebsd make3rd createdir clean cleanall
