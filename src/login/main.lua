@@ -16,9 +16,6 @@ skynet.start(
         local proto = skynet.uniqueservice "protoloader"
         skynet.call(proto, "lua", "load", protopatch)
 
-        local namecheck = skynet.uniqueservice("namecheck")
-        cluster.register("namecheck", namecheck)
-
         -- 启动登录服务器
         local loginservice = skynet.uniqueservice("logind")
         -- 注册服务名

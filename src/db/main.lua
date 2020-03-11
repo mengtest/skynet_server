@@ -12,7 +12,7 @@ skynet.start(
         skynet.newservice("debug_console", config.debug_port)
 
         -- 启动数据库
-        local dbmgr = skynet.uniqueservice "dbmgr"
+        local dbmgr = skynet.uniqueservice("dbmgr")
         skynet.call(dbmgr, "lua", "system", "open")
 
         local namecheck = skynet.uniqueservice("namecheck")
