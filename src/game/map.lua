@@ -56,7 +56,7 @@ function CMD.open(conf)
     msgsender.init()
     idmgr.setmaxid(conf.maxtempid)
     basemap.init(conf)
-    aoimgr.init(assert(skynet.launch("caoi", conf.name)))
+    aoimgr.init(assert(skynet.launch("caoi", skynet.self())))
 end
 
 function CMD.close()

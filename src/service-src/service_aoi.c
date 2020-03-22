@@ -14,6 +14,8 @@ struct alloc_cookie {
 struct aoi_space_plus {
 	struct alloc_cookie* cookie;
 	struct aoi_space * space;
+	struct skynet_context * ctx;
+	int map_handle;
 };
 
 static void *
@@ -36,29 +38,13 @@ my_alloc(void * ud, void *ptr, size_t sz) {
 	return NULL;
 }
 
-/*static int
-getnumbercount(uint32_t n) {
-	int count = 0;
-	while(n!=0)
-	{
-		n = n / 10;
-		++ count;
-	}
-	return count;
-}*/
-
 static void
 callbackmessage(void *ud, uint32_t watcher, uint32_t marker) {
-	struct skynet_context * ctx = ud;
-	//size_t sz = getnumbercount(watcher) + getnumbercount(marker) + strlen("aoicallback") + 2;
-	//char * msg = skynet_malloc(sz);
-	//memset(msg,0,sz);
+	struct aoi_space_plus * space_plus = ud;
+
 	char temp[64];
-	int n = sprintf(temp,"aoicallback %d %d",watcher,marker);
-	//caoi server的启动在laoi启动之后，handle理论是caoi = laoi + 1
-	//如果失败,就需要换方式了
-	skynet_send(ctx,0,skynet_current_handle() - 1,PTYPE_TEXT,0,temp,n);
-	//skynet_free(msg);
+	int n = sprintf(temp, "aoicallback %d %d", watcher, marker);
+	skynet_send(space_plus->ctx, 0, space_plus->map_handle, PTYPE_TEXT, 0, temp, n);
 }
 
 static void
@@ -76,7 +62,7 @@ _parm(char *msg, int sz, int command_sz) {
 }
 
 static void
-_ctrl(struct skynet_context * ctx, struct aoi_space * space, const void * msg, int sz) {
+_ctrl(struct skynet_context * ctx, struct aoi_space_plus * space_plus, const void * msg, int sz) {
 	char tmp[sz+1];
 	memcpy(tmp, msg, sz);
 	tmp[sz] = '\0';
@@ -114,12 +100,12 @@ _ctrl(struct skynet_context * ctx, struct aoi_space * space, const void * msg, i
 		pos[1] = strtof(posstr , NULL);
 		posstr = strsep(&text, " ");
 		pos[2] = strtof(posstr , NULL);
-		//printf("id:%d,mode:%s,pos:%f-%f-%f\n",id,mode,pos[0],pos[1],pos[2]);
-		aoi_update(space, id, mode, pos);
+		
+		aoi_update(space_plus->space, id, mode, pos);
 		return;
 	}
 	if (memcmp(command,"message",i)==0) {
-		aoi_message(space, callbackmessage, ctx);
+		aoi_message(space_plus->space, callbackmessage, space_plus);
 		return;
 	}
 	skynet_error(ctx, "[aoi] Unkown command : %s", command);
@@ -139,7 +125,6 @@ caoi_create(void) {
 
 void
 caoi_release(struct aoi_space_plus * space_plus) {
-	printf("caoi_release");
 	aoi_release(space_plus->space);
 	skynet_free(space_plus->cookie);
 	skynet_free(space_plus);
@@ -147,10 +132,10 @@ caoi_release(struct aoi_space_plus * space_plus) {
 
 static int
 caoi_cb(struct skynet_context * context, void *ud, int type, int session, uint32_t source, const void * msg, size_t sz) {
-	struct aoi_space * space = ud;
+	struct aoi_space_plus * space_plus = ud;
 	switch (type) {
 	case PTYPE_TEXT:
-		_ctrl(context , space , msg , (int)sz);
+		_ctrl(context , space_plus , msg , (int)sz);
 		break;
 	}
 
@@ -158,7 +143,9 @@ caoi_cb(struct skynet_context * context, void *ud, int type, int session, uint32
 }
 
 int
-caoi_init(struct aoi_space_plus * space_plus, struct skynet_context *ctx/*, const char * parm*/) {
-	skynet_callback(ctx, space_plus->space, caoi_cb);
+caoi_init(struct aoi_space_plus * space_plus, struct skynet_context *ctx, const char * args) {
+	space_plus->map_handle = atoi(args);
+	space_plus->ctx = ctx;
+	skynet_callback(ctx, space_plus, caoi_cb);
 	return 0;
 }

@@ -1,0 +1,4 @@
+消息由消息的处理者释放消息所占用的内存。
+通过设置skynet_send的type为PTYPE_TAG_DONTCOPY来控制是否复制消息。
+若设置为PTYPE_TAG_DONTCOPY，则接受者释放的就是生产者申请的内存。
+如果没有设置，则需要生产者自己处理内存的释放
