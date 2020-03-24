@@ -80,12 +80,15 @@ genfilename(struct logger * inst, time_t now) {
 	else
 		closedir(dir);
 
-	sprintf(filename, "%d-%d-%d-%d_%d.log", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, inst->index);
+	do{
+		if(inst->filename != NULL)
+			skynet_free(inst->filename);
 
-	if(inst->filename != NULL)
-		skynet_free(inst->filename);
-	inst->filename = skynet_malloc(strlen(dirname)+strlen(filename)+1);
-	sprintf(inst->filename, "%s/%s", dirname, filename);
+		sprintf(filename, "%d-%d-%d-%d_%d.log", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, inst->index);
+		inst->filename = skynet_malloc(strlen(dirname) + strlen(filename) + 1);
+		sprintf(inst->filename, "%s/%s", dirname, filename);
+		inst->index += 1;
+	} while (access(inst->filename, F_OK) == 0);
 }
 
 bool
@@ -103,7 +106,6 @@ trycreate_newlogfile(struct logger * inst, time_t now){
 	}
 	else if(inst->filesize >= DEFAULT_ROLL_SIZE)
 	{
-		inst->index += 1;
 		inst->filesize = 0;
 		genfilename(inst, now);
 		return true;
