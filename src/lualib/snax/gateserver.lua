@@ -88,7 +88,6 @@ function gateserver.start(handler)
         end
     end
 
-    -- 接收到很多消息，得在这里一条一条处理？？
     MSG.more = dispatch_queue
 
     -- 有新连接建立的时候，这边会被调用

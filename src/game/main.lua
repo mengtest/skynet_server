@@ -14,6 +14,7 @@ skynet.start(
         -- 启动后台
         skynet.newservice("debug_console", config.debug_port)
 
+        -- 加载游戏数据
         skynet.uniqueservice("gamedataload")
 
         -- 加载解析proto文件

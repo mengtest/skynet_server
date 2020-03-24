@@ -66,6 +66,15 @@ local function sendrequest(service, fd, name, args)
     write(service, fd, str)
 end
 
+-- 加载proto
+local function load_proto()
+    local protoloader = skynet.uniqueservice "protoloader"
+    local slot = skynet.call(protoloader, "lua", "index", "clientproto")
+    host = sprotoloader.load(slot):host "package"
+    slot = skynet.call(protoloader, "lua", "index", "serverproto")
+    request = host:attach(sprotoloader.load(slot))
+end
+
 local function launch_slave(auth_handler)
     local function auth(fd, addr)
         -- 和client握手，生成token
@@ -281,7 +290,9 @@ local function launch_master(conf)
                     skynet.error(string.format("invalid client (fd = %d) error = %s", fd, err))
                 end
             end
-            --socket.close_fd(fd) -- We haven't call socket.start, so use socket.close_fd rather than socket.close.
+
+            -- 这边做机器人的时候注释过，下次测试的时候备注一下为什么
+            socket.close_fd(fd) -- We haven't call socket.start, so use socket.close_fd rather than socket.close.
         end
     )
 end
@@ -292,11 +303,6 @@ local function login(conf)
     local name = "." .. (conf.name or "login")
     skynet.start(
         function()
-            local protoloader = skynet.uniqueservice "protoloader"
-            local slot = skynet.call(protoloader, "lua", "index", "clientproto")
-            host = sprotoloader.load(slot):host "package"
-            slot = skynet.call(protoloader, "lua", "index", "serverproto")
-            request = host:attach(sprotoloader.load(slot))
             -- 查询launch_master是否启动
             local loginmaster = skynet.localname(name)
             if loginmaster then
@@ -307,6 +313,7 @@ local function login(conf)
                 launch_master = nil
                 conf = nil
                 launch_slave(auth_handler)
+                load_proto()
             else
                 -- 启动launch_master
                 -- 用于登录到login

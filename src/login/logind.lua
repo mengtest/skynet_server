@@ -43,27 +43,26 @@ end
 function server.login_handler(server, uid, secret)
     log.notice("%s@%s is login, secret is %s", uid, server, crypt.hexencode(secret))
     -- 校验要登陆的服务器是否存在
-    -- gate启动的时候注册到server_list了
-    if server_list[server] == nil then
-        local gated = cluster.proxy(server, "@gated")
+    local gated = server_list[server]
+    if gated == nil then
+        gated = cluster.proxy(server, "@gated")
         server_list[server] = gated
     end
     
-    local gameserver = assert(server_list[server], "Unknown server :" .. server)
-    -- only one can login, because disallow multilogin
+    assert(gated, "Unknown server :" .. server)
+    
     local last = user_online[uid]
     -- 已经登陆了的话，把上次登录的踢下线
     if last then
-        skynet.call(last.address, "lua", "kick", uid, last.subid)
+        skynet.call(last.gated, "lua", "kick", uid, last.subid)
+        log.warning("user %s is already online, kick", uid)
     end
-    if user_online[uid] then
-        log.warning("user %s is already online", uid)
-    end
+    
     -- 向服务器发送登陆请求
-    local subid, gateip, gateport = skynet.call(gameserver, "lua", "login", uid, secret)
+    local subid, gateip, gateport = skynet.call(gated, "lua", "login", uid, secret)
     subid = tostring(subid)
     user_online[uid] = {
-        address = gameserver,
+        gated = gated,
         subid = subid,
         server = server
     }

@@ -145,18 +145,6 @@ function server.ip(username)
     end
 end
 
--- 获取所有在线玩家的信息
-local function getalluser()
-    local userlist = {}
-    local _uid
-    local _subid
-    for k, _ in pairs(user_online) do
-        _uid, _subid = server.userid(k)
-        userlist[_uid] = _subid
-    end
-    return userlist
-end
-
 -- gated调用了start函数
 -- 将gated中注册的函数通过conf传递给msgserver
 function server.start(conf)
@@ -165,12 +153,10 @@ function server.start(conf)
     local handler = {}
 
     local CMD = {
-        getalluser = getalluser,
         -- 这边主要是gated那边定义的函数
         login = assert(conf.login_handler),
         logout = assert(conf.logout_handler),
         kick = assert(conf.kick_handler),
-        request = assert(conf.send_request_handler),
         boardrequest = assert(conf.send_board_request_handler),
         close = assert(conf.close_handler),
         auth_handler = assert(conf.auth_handler)

@@ -97,7 +97,7 @@ function server.disconnect_handler(username)
 end
 
 -- call by self (when recv a request from client)
--- 从client收到消息的时候，调用这里去call agent
+-- 从客户端收到消息的时候，转发消息给agent
 function server.request_handler(username, msg)
     local u = username_map[username]
     return skynet.tostring(skynet.rawcall(u.agent, "client", msg))
@@ -119,16 +119,6 @@ function server.register_handler(conf)
 
     local instancemgr = skynet.uniqueservice("instancemgr")
     skynet.call(instancemgr, "lua", "open", conf.agentpool)
-end
-
--- call by msgagent(server send request)
-function server.send_request_handler(uid, subid, msg)
-    local u = users[uid]
-    if u then
-        local username = msgserver.username(uid, subid, servername)
-        assert(u.username == username)
-        msgserver.request(u.username, msg)
-    end
 end
 
 -- 广播消息给gated上的所有玩家
