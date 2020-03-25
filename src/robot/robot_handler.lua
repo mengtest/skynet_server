@@ -1,4 +1,4 @@
-local handler = require "agent.handler"
+local handler = require "handler"
 local socket = require "skynet.socket"
 local skynet = require "skynet"
 local crypt = require "skynet.crypt"

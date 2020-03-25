@@ -7,13 +7,15 @@ local conf = {}
 conf["account"] = {
     rediskey = "uid",
     indexkey = nil,
+    indexvalue = nil,
     columns = nil
 }
 
 conf["playerdate"] = {
     rediskey = "uuid",
     indexkey = "uid",
-    indexvalue = nil
+    indexvalue = nil,
+    columns = nil
 }
 
 for k, v in pairs(conf) do

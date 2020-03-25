@@ -313,7 +313,6 @@ local function login(conf)
                 launch_master = nil
                 conf = nil
                 launch_slave(auth_handler)
-                load_proto()
             else
                 -- 启动launch_master
                 -- 用于登录到login
@@ -324,6 +323,7 @@ local function login(conf)
                 skynet.register(name)
                 launch_master(conf)
             end
+            load_proto()
         end
     )
 end

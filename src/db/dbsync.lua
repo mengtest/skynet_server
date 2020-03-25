@@ -8,19 +8,30 @@ local mysqlpool
 
 local traceback = debug.traceback
 
+local function execute(sql)
+    local ok, ret = xpcall(skynet.call, traceback, mysqlpool, "lua", "execute", sql, true)
+    if not ok then
+        log.warning("execute sql failed : %s", sql)
+        return false
+    elseif ret.badresult then
+        log.debug("errno:" .. ret.errno .. " sqlstate:" .. ret.sqlstate .. " err:" .. ret.err .. "\nsql:" .. sql)
+        return false
+    end
+
+    if ret.affected_rows == 0 then
+        log.warning("execute sql failed affected_rows = 0 : %s", sql)
+        return false
+    end
+end
+
 -- 将queue中的sql语句写入mysql中
 local function sync_impl()
     while true do
         for k, v in pairs(queue) do
-            local ok, ret = xpcall(skynet.call, traceback, mysqlpool, "lua", "execute", v, true)
-            if not ok then
-                log.warning("execute sql failed : %s", v)
-            elseif ret.badresult then
-                log.debug("errno:" .. ret.errno .. " sqlstate:" .. ret.sqlstate .. " err:" .. ret.err .. "\nsql:" .. v)
-            end
+            execute(v)
             queue[k] = nil
         end
-        skynet.sleep(500)
+        skynet.sleep(100)
     end
 end
 
@@ -37,11 +48,7 @@ function CMD.sync(sql, now)
     if not now then
         table.insert(queue, sql)
     else
-        local ret = skynet.call(mysqlpool, "lua", "execute", sql, true)
-        if ret.badresult then
-            log.debug("errno:" .. ret.errno .. " sqlstate:" .. ret.sqlstate .. " err:" .. ret.err .. "\nsql:" .. sql)
-            return false
-        end
+        return execute(sql)
     end
     return true
 end

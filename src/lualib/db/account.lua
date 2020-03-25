@@ -30,7 +30,7 @@ function account.auth(uid, password)
         row.uid = uid
         row.createtime = os.time()
         row.logintime = row.createtime
-        dbmgrcmd.add("account", row)
+        dbmgrcmd.insert("account", row)
     end
     return true
 end

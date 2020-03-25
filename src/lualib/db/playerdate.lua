@@ -32,7 +32,7 @@ end
 
 -- 创建角色信息
 function playerdate.create(character)
-    return dbmgrcmd.add("playerdate", character, true)
+    return dbmgrcmd.insert("playerdate", character, true)
 end
 
 return playerdate

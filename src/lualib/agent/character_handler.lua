@@ -85,7 +85,17 @@ function REQUEST.charactercreate(args)
             character = nil
         }
     end
-    -- TODO 检查名称的合法性
+
+    -- 选择职业
+    local jobdata = sharetable.query "job"
+    if jobdata[args.job] == nil then
+        log.debug("%s create character failed, job error!", user.uid)
+        return {
+            character = nil
+        }
+    end
+
+    -- 检查名称的合法性
     local result = skynet.call(namecheck, "lua", "playernamecheck", args.name)
     if not result then
         log.debug("%s create character failed, name repeat!", user.uid)
@@ -94,13 +104,6 @@ function REQUEST.charactercreate(args)
         }
     end
     
-    local jobdata = sharetable.query "job"
-    if jobdata[args.job] == nil then
-        log.debug("%s create character failed, job error!", user.uid)
-        return {
-            character = nil
-        }
-    end
     local character = create(args.name, args.job, args.sex)
     if skynet.call(dbmgr, "lua", "playerdate", "create", character) then
         user.characterlist[character.uuid] = true
@@ -108,6 +111,7 @@ function REQUEST.charactercreate(args)
     else
         log.debug("%s create character failed, save date failed!", user.uid)
     end
+    
     return {
         character = character
     }
@@ -145,7 +149,7 @@ local function initUserData(dbdata)
         logintime = dbdata.logintime
     }
     user.character:setobjinfo(playerinfo)
-    user.character:setdata(dbdata.data)
+    user.character:setdata(packer.unpack(dbdata.data))
 end
 
 -- 选择角色

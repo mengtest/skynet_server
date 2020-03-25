@@ -11,9 +11,9 @@ local service = {}
 local servername = {
     "redispool",
     "mysqlpool",
-    -- "mongopool",
     "dbsync"
 }
+
 -- DB表结构
 -- schema[tablename] = { "pk","fields" = {}}
 local schema = {}
@@ -30,16 +30,21 @@ end
 
 -- 获取table的主键
 local function get_primary_key(tbname)
-    local sql =
-        "select k.column_name " ..
-        "from information_schema.table_constraints t " ..
-            "join information_schema.key_column_usage k " ..
-                "using (constraint_name,table_schema,table_name) " ..
-                    "where t.constraint_type = 'PRIMARY KEY' " ..
-                        "and t.table_schema= '" .. dbname .. "'" .. "and t.table_name = '" .. tbname .. "'"
+    local sql = {
+        "select k.column_name ",
+        "from information_schema.table_constraints t ",
+        "join information_schema.key_column_usage k ",
+        "using (constraint_name,table_schema,table_name) ",
+        "where t.constraint_type = 'PRIMARY KEY' ",
+        "and t.table_schema= '",
+        dbname,
+        "'",
+        "and t.table_name = '",
+        tbname,
+        "'"
+    }
 
-    local t = skynet.call(service["mysqlpool"], "lua", "execute", sql)
-
+    local t = skynet.call(service["mysqlpool"], "lua", "execute", table.concat(sql))
     return t[1]["column_name"]
 end
 
@@ -82,37 +87,35 @@ local function load_schema_to_redis()
     local sql = "select table_name from information_schema.tables where table_schema='" .. dbname .. "'"
     local rs = skynet.call(service["mysqlpool"], "lua", "execute", sql)
     for _, row in pairs(rs) do
-        local tbname
-        if not row.table_name then
+        local tbname = row.table_name
+        if tbname == nil then
             tbname = row.TABLE_NAME
-        else
-            tbname = row.table_name
         end
 
-        schema[tbname] = {}
-        schema[tbname]["fields"] = {}
-        schema[tbname]["pk"] = get_primary_key(tbname)
+        local schema_table = {}
+        schema_table.fields = {}
+        schema_table.pk = get_primary_key(tbname)
 
         local fields = get_fields(tbname)
         for _, field in pairs(fields) do
             local field_type = get_field_type(tbname, field)
-            if
-                field_type == "char" or field_type == "varchar" or field_type == "tinytext" or field_type == "text" or
-                    field_type == "mediumtext" or
-                    field_type == "longtext"
-             then
-                schema[tbname]["fields"][field] = "string"
+            if field_type == "char" or field_type == "varchar" or
+             field_type == "tinytext" or field_type == "text" or
+             field_type == "mediumtext" or field_type == "longtext" then
+                schema_table.fields[field] = "string"
             else
-                schema[tbname]["fields"][field] = "number"
+                schema_table.fields[field] = "number"
             end
         end
+        schema[tbname] = schema_table
     end
 end
 
 -- 根据数值类型转化
 local function convert_record(tbname, record)
+    local fields = schema[tbname].fields
     for k, v in pairs(record) do
-        if schema[tbname]["fields"][k] == "number" then
+        if fields[k] == "number" then
             record[k] = tonumber(v)
         end
     end
@@ -179,7 +182,6 @@ function CMD.load_data_impl(config, uid)
                 )
             end
         else
-            -- 这边看是不是要修改一下，account = '%s'，尽量用数字ID查询？
             if not config.columns then
                 sql =
                     string.format(
@@ -409,8 +411,9 @@ function CMD.execute_multi(tbname, uid, id, fields)
         if id then
             if fields then
                 result = {}
+                t = t[id]
                 for _, v in pairs(fields) do
-                    result[v] = t[id][v]
+                    result[v] = t[v]
                 end
             else
                 result = t[id]
@@ -418,18 +421,18 @@ function CMD.execute_multi(tbname, uid, id, fields)
         else
             if fields then
                 result = {}
-                for k, _ in pairs(t) do
-                    result[k] = {}
-                    setmetatable(
-                        result,
-                        {
-                            __mode = "k"
-                        }
-                    )
-
+                setmetatable(
+                    result,
+                    {
+                        __mode = "k"
+                    }
+                )
+                for k, v in pairs(t) do
+                    local temp = {}
                     for i = 1, #fields do
-                        result[k][fields[i]] = t[k][fields[i]]
+                        temp[fields[i]] = v[fields[i]]
                     end
+                    result[k] = temp
                 end
             else
                 result = t
@@ -440,10 +443,9 @@ function CMD.execute_multi(tbname, uid, id, fields)
     return result
 end
 
--- ！！这边的add、update都会导致uid这个字段跟着更新...可能需要调整一下
 -- redis中增加一行记录，默认同步到mysql
 -- 表名，列名，立刻同步到数据库，不同步到数据库
-function CMD.add(tbname, row, immed, nosync)
+function CMD.insert(tbname, row, immed, nosync)
     local config = dbtableconfig[tbname]
     local uid = row.uid
     local key = config.rediskey
@@ -475,24 +477,26 @@ function CMD.add(tbname, row, immed, nosync)
     end
 
     if not nosync then
-        local columns
-        local values
+        local sql = {}
+        table.insert(sql, "insert into ")
+        table.insert(sql, tbname)
+        table.insert(sql, "(")
         for k, v in pairs(row) do
-            if not columns then
-                columns = k
-            else
-                columns = columns .. "," .. k
-            end
-
-            if not values then
-                values = "'" .. v .. "'"
-            else
-                values = values .. "," .. "'" .. v .. "'"
-            end
+            table.insert(sql, k)
+            table.insert(sql, ",")
         end
+        sql[#sql] = nil
+        table.insert(sql, ") values(")
+        for i = 4, #sql, 2 do
+            table.insert(sql, "'")
+            table.insert(sql, row[sql[i]])
+            table.insert(sql, "'")
+            table.insert(sql, ",")
+        end
+        sql[#sql] = nil
+        table.insert(sql, ")")
 
-        local sql = "insert into " .. tbname .. "(" .. columns .. ") values(" .. values .. ")"
-        return skynet.call(service["dbsync"], "lua", "sync", sql, immed)
+        return skynet.call(service["dbsync"], "lua", "sync", table.concat(sql), immed)
     end
     return true
 end
@@ -531,15 +535,27 @@ function CMD.update(tbname, row, nosync)
     end
 
     if not nosync then
-        local setvalues = ""
+        local pk = schema[tbname]["pk"]
+        local sql = {}
+        table.insert(sql, "update ")
+        table.insert(sql, tbname)
+        table.insert(sql, " set ")
 
         for k, v in pairs(row) do
-            setvalues = setvalues .. k .. "='" .. v .. "',"
+            table.insert(sql, k)
+            table.insert(sql, "='")
+            table.insert(sql, v)
+            table.insert(sql, "',")
         end
-        setvalues = setvalues:trim(",")
-        local pk = schema[tbname]["pk"]
-        local sql = "update " .. tbname .. " set " .. setvalues .. " where " .. pk .. "='" .. row[pk] .. "'"
-        skynet.call(service["dbsync"], "lua", "sync", sql)
+        sql[#sql] = "'"
+
+        table.insert(sql, " where ")
+        table.insert(sql, pk)
+        table.insert(sql, "='")
+        table.insert(sql, row[pk])
+        table.insert(sql, "'")
+        
+        skynet.call(service["dbsync"], "lua", "sync", table.concat(sql))
     end
 end
 

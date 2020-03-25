@@ -3,7 +3,7 @@ local socket = require "skynet.socket"
 local crypt = require "skynet.crypt"
 local sprotoloader = require "sprotoloader"
 local util = require "util"
-local robot_handler = require "robot.robot_handler"
+local robot_handler = require "robot_handler"
 local log = require "base.syslog"
 
 local _robot = {}
@@ -93,7 +93,7 @@ local function init_method(robot)
             if f then
                 f(self, args)
             else
-                print("RESPONSE : " .. s.name)
+                print("cannot found RESPONSE : " .. s.name)
             end
         elseif type == "REQUEST" then
             local f = self.REQUEST[id]
@@ -105,7 +105,7 @@ local function init_method(robot)
                     socket.write(self.fd, package)
                 end
             else
-                print("REQUEST : " .. id)
+                print("cannot found REQUEST : " .. id)
             end
         end
     end

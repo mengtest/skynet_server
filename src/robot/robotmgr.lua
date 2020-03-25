@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local r = require "robot.robot"
+local r = require "robot"
 
 local CMD = {}
 local robot = {}
