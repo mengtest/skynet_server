@@ -15,7 +15,7 @@ local servername = {
 }
 
 -- DB表结构
--- schema[tablename] = { "pk","fields" = {}}
+-- schema[tablename] = { "pk","fields" = {fieldname = valuetype}}
 local schema = {}
 
 local dbname = mysqlconf.center.database
@@ -82,7 +82,7 @@ local function get_field_type(tbname, field)
     return rs[1]["data_type"] or rs[1]["DATA_TYPE"]
 end
 
--- 构建DB中的结构到schema中
+-- 解析表中字段类型，文本类型为true，其他类型nil
 local function load_schema_to_redis()
     local sql = "select table_name from information_schema.tables where table_schema='" .. dbname .. "'"
     local rs = skynet.call(service["mysqlpool"], "lua", "execute", sql)
@@ -102,9 +102,7 @@ local function load_schema_to_redis()
             if field_type == "char" or field_type == "varchar" or
              field_type == "tinytext" or field_type == "text" or
              field_type == "mediumtext" or field_type == "longtext" then
-                schema_table.fields[field] = "string"
-            else
-                schema_table.fields[field] = "number"
+                schema_table.fields[field] = true
             end
         end
         schema[tbname] = schema_table
@@ -115,7 +113,7 @@ end
 local function convert_record(tbname, record)
     local fields = schema[tbname].fields
     for k, v in pairs(record) do
-        if fields[k] == "number" then
+        if fields[k] ~= true then
             record[k] = tonumber(v)
         end
     end

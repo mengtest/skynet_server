@@ -2,33 +2,53 @@ local skynet = require "skynet"
 local service = require "service"
 local log = require "syslog"
 
-local mysqlpool
 local CMD = {}
+local usename = {}
 
 -- 检查角色名是否重复
 function CMD.playernamecheck(name)
-    local sql = string.format("select name from playerdate where name = '%s' limit 0,1", name)
-    local result = skynet.call(mysqlpool, "lua", "execute", sql)
-    if not result.badresult then
-        if table.empty(result) then
-            return true
-        else
-            return false
-        end
-    else
-        log.error(
-            "errno:" .. result.errno .. " sqlstate:" .. result.sqlstate .. " err:" .. result.err .. "\nsql:" .. sql
-        )
-        return false
+    if usename[name] == nil then
+        usename[name] = true
+        return true
     end
+
+    return false
 end
 
 function CMD.close()
     log.notice("close namecheck...")
 end
 
+local function load_name()
+    local mysqlpool = skynet.uniqueservice("mysqlpool")
+    local offset = 0
+    local sql
+    while true do
+        sql =
+            string.format(
+            "select name from playerdate limit %d, 1000",
+            offset
+        )
+
+        local rs = skynet.call(mysqlpool, "lua", "execute", sql)
+        if #rs <= 0 then
+            break
+        end
+
+        for _, row in pairs(rs) do
+            usename[row.name] = true
+        end
+
+        if #rs < 1000 then
+            break
+        end
+
+        offset = offset + 1000
+    end
+end
+
 local function init()
-    mysqlpool = skynet.uniqueservice("mysqlpool")
+    load_name()
 end
 
 service.init {

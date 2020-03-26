@@ -27,7 +27,10 @@ CSERVICE_OBJ = $(foreach v, $(CSERVICE_NAME), $(CSERVICE_PATH)/$(v).so)
 VPATH += $(LUACLIB_SRC_PATH)
 VPATH += $(CSERVICE_CSRC_PATH)
 
-linux macosx freebsd : make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ)
+linux macosx freebsd : submodule make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ)
+
+submodule:
+	git submodule update --init
 
 make3rd :
 	@$(MAKE) $(PLAT) -C $(SKYNET_ROOT) --no-print-directory
