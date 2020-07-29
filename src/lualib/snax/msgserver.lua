@@ -92,17 +92,6 @@ local connection = {}
 
 local host
 
--- 向指定玩家发送信息
-function server.request(username, msg)
-    local u = user_online[username]
-    local fd = u.fd
-    if fd then
-        if connection[fd] then
-            socketdriver.send(u.fd, msg)
-        end
-    end
-end
-
 -- 解析username
 function server.userid(username)
     -- base64(uid)@base64(server)#base64(subid)
@@ -157,7 +146,6 @@ function server.start(conf)
         login = assert(conf.login_handler),
         logout = assert(conf.logout_handler),
         kick = assert(conf.kick_handler),
-        boardrequest = assert(conf.send_board_request_handler),
         close = assert(conf.close_handler),
         auth_handler = assert(conf.auth_handler)
     }
@@ -277,31 +265,60 @@ function server.start(conf)
     end
 
     -- 这边会把response全部存起来，只有再完全重新登录才会清理掉，重新连接不会清理，只会有版本号的改变
-    -- 暂时不启用
     local function do_request(fd, message)
-        local u = assert(connection[fd], "invalid fd")
+		local u = assert(connection[fd], "invalid fd")
+		local session = string.unpack(">I4", message, -4)
+		message = message:sub(1,-5)
+		local p = u.response[session]
+		if p then
+			-- session can be reuse in the same connection
+			if p[3] == u.version then
+				local last = u.response[session]
+				u.response[session] = nil
+				p = nil
+				if last[2] == nil then
+					local error_msg = string.format("Conflict session %s", crypt.hexencode(session))
+					skynet.error(error_msg)
+					error(error_msg)
+				end
+			end
+		end
 
-        local p = {fd}
-        local ok, result = pcall(conf.request_handler, u.username, message)
-        -- NOTICE: YIELD here, socket may close.
-        result = result or ""
-        if not ok then
-            skynet.error(result)
-        else
-            result = result
-        end
-        p[2] = string.pack(">s2", result)
-        p[3] = u.version
-        p[4] = u.index
+		if p == nil then
+			p = { fd }
+			u.response[session] = p
+			local ok, result = pcall(conf.request_handler, u.username, message)
+			-- NOTICE: YIELD here, socket may close.
+			result = result or ""
+			if not ok then
+				skynet.error(result)
+				result = string.pack(">BI4", 0, session)
+			else
+				result = result .. string.pack(">BI4", 1, session)
+			end
 
-        u.index = u.index + 1
-        -- the return fd is p[1] (fd may change by multi request) check connect
-        fd = p[1]
-        if connection[fd] then
-            socketdriver.send(fd, p[2])
-        end
-        p[1] = nil
-        -- retire_response(u)
+			p[2] = string.pack(">s2",result)
+			p[3] = u.version
+			p[4] = u.index
+		else
+			-- update version/index, change return fd.
+			-- resend response.
+			p[1] = fd
+			p[3] = u.version
+			p[4] = u.index
+			if p[2] == nil then
+				-- already request, but response is not ready
+				return
+			end
+		end
+		u.index = u.index + 1
+		-- the return fd is p[1] (fd may change by multi request) check connect
+		fd = p[1]
+		if connection[fd] then
+			socketdriver.send(fd, p[2])
+		end
+		p[1] = nil
+		retire_response(u)
     end
 
     local function request(fd, msg, sz)

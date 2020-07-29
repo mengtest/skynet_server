@@ -121,13 +121,6 @@ function server.register_handler(conf)
     skynet.call(instancemgr, "lua", "open", conf.agentpool)
 end
 
--- 广播消息给gated上的所有玩家
-function server.send_board_request_handler(msg)
-    for _, v in pairs(users) do
-        msgserver.request(v.username, msg)
-    end
-end
-
 -- 退出服务
 function server.close_handler()
     log.notice("close gated...")

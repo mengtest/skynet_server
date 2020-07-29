@@ -87,7 +87,6 @@ skynet.register_protocol {
             log.warning("invalid message type : %s", type)
             logout(7)
         end
-        skynet.sleep(10)
     end
 }
 

@@ -1,13 +1,10 @@
 local skynet = require "skynet"
 local protopatch = require "config.protopatch"
-local profile = require "skynet.profile"
 local log = require "syslog"
 
 skynet.start(
     function()
         log.debug("Robot Server start")
-        profile.start()
-        local t = os.clock()
 
         -- 加载解析proto文件
         local proto = skynet.uniqueservice "protoloader"
@@ -31,9 +28,7 @@ skynet.start(
             skynet.call(v, "lua", "start")
         end
 
-        local time = profile.stop()
-        local t1 = os.clock()
-        log.debug("start server cost time:" .. time .. "==" .. (t1 - t))
+        log.debug("start server cost time:" .. skynet.now())
         skynet.exit()
     end
 )

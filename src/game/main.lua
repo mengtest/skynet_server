@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 local config = require "config.gameconfig"
 local protopatch = require "config.protopatch"
-local profile = require "skynet.profile"
 local log = require "syslog"
 local cluster = require "skynet.cluster"
 
@@ -10,7 +9,6 @@ skynet.start(
         local nodename = skynet.getenv("nodename")
         config = config[nodename]
         log.debug(nodename .. " Server start")
-        profile.start()
         -- 启动后台
         skynet.newservice("debug_console", config.debug_port)
 
@@ -30,7 +28,7 @@ skynet.start(
 
         skynet.call(gated, "lua", "open", config)
 
-        log.debug("start server cost time:" .. profile.stop())
+        log.debug("start server cost time:" .. skynet.now())
         skynet.exit()
     end
 )

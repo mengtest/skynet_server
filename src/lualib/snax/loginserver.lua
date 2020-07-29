@@ -25,7 +25,6 @@ Protocol:
 	10. Server->Client : 200 base64(subid)
 
 Error Code:
-	400 Bad Request . challenge failed
 	401 Unauthorized . unauthorized by auth_handler
 	403 Forbidden . login_handler failed
 	406 Not Acceptable . already in login (disallow multi login)
@@ -58,6 +57,8 @@ local function read_msg(fd)
     local s = read(fd, 2)
     local size = s:byte(1) * 256 + s:byte(2)
     local msg = read(fd, size)
+    local session = string.unpack(">I4", msg, -4)
+    msg = msg:sub(1,-5)
     return host:dispatch(msg)
 end
 
@@ -112,11 +113,6 @@ local function launch_slave(auth_handler)
             local hmac = crypt.hmac64(challenge, secret)
             -- 对比两边利用 challenge 和 secret 生成的结果
             if hmac ~= crypt.base64decode(args.hmac) then
-                local msg =
-                    response {
-                    result = "400 Bad Request"
-                }
-                write("auth", fd, msg)
                 error "challenge failed"
             else
                 local msg =
