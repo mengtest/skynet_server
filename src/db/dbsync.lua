@@ -22,6 +22,8 @@ local function execute(sql)
         log.warning("execute sql failed affected_rows = 0 : %s", sql)
         return false
     end
+
+    return true
 end
 
 -- 将queue中的sql语句写入mysql中

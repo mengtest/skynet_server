@@ -23,11 +23,9 @@ end
 
 function CMD.close()
     log.notice("close redispol...")
-    -- 清空redis中的数据并断开连接
-    center:flushall()
+    -- 断开连接
     center:disconnect()
     for _, db in ipairs(group) do
-        db:flushall()
         db:disconnect()
     end
 end
