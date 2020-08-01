@@ -45,7 +45,7 @@ local function assert_socket(service, v, fd)
 end
 
 local function write(service, fd, text)
-    local package = string.pack(">s2", text)
+    local package = string.pack(">I2", #text + 4) .. text .. string.pack(">I4", 0)
     assert_socket(service, socket.write(fd, package), fd)
 end
 

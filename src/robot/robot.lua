@@ -86,6 +86,8 @@ local function init_method(robot)
     function robot:dispatch_message()
         local ok, content = recv_response(self.readpackage())
         assert(ok)
+		local session = string.unpack(">I4", content, -4)
+		content = content:sub(1,-5)
         local type, id, args, response = self.host:dispatch(content)
         if type == "RESPONSE" then
             local s = assert(self.session[id])

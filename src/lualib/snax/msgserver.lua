@@ -212,6 +212,8 @@ function server.start(conf)
 
     local function auth(fd, addr, msg, sz)
         local message = netpack.tostring(msg, sz)
+        local session = string.unpack(">I4", message, -4)
+        message = message:sub(1,-5)
         local type, name, args, response = host:dispatch(message)
         assert(type == "REQUEST")
         if name == "login" then
@@ -233,7 +235,7 @@ function server.start(conf)
             response {
             result = result
         }
-        socketdriver.send(fd, netpack.pack(package))
+        socketdriver.send(fd, string.pack(">I2", #package + 4)..package..string.pack(">I4", session))
 
         if close then
             gateserver.closeclient(fd)

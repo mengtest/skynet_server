@@ -9,6 +9,11 @@ local msgsender = {}
 
 local host
 
+local function messagepackage(name, args)
+    local str = request(name, args)
+    return string.pack(">I2", #str + 4)..str..string.pack(">I4", 0)
+end
+
 function msgsender.boardcast(package, list, obj)
     if list == nil then
         assert(obj)
@@ -24,18 +29,14 @@ end
 function msgsender.sendrequest(name, args, user)
     assert(name)
     assert(args)
-    local str = request(name, args)
-    local package = string.pack(">s2", str)
-    socketdriver.send(user.fd, package)
+    socketdriver.send(user.fd, messagepackage(name, args))
 end
 
 -- 发送广播请求
 function msgsender.sendboardrequest(name, args, agentlist, user)
     assert(name)
     assert(args)
-    local str, resp = request(name, args)
-    local package = string.pack(">s2", str)
-    msgsender.boardcast(package, agentlist, user)
+    msgsender.boardcast(messagepackage(name, args), agentlist, user)
 end
 
 function msgsender.gethost()
