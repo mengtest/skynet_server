@@ -26,7 +26,7 @@ function RESPONSE:handshake(args)
 
     -- 根据获取的serverkey 和 clientkey计算出secret
     self.secret = crypt.dhsecret(self.serverkey, self.clientkey)
-    log.err("sceret is "..crypt.hexencode(self.secret))
+    log.error("sceret is "..crypt.hexencode(self.secret))
     -- 回应服务器第一步握手的挑战码，确认握手正常。
     self.hmac = crypt.hmac64(self.challenge, self.secret)
     self:send_request(
@@ -47,7 +47,7 @@ local function encode_token(token)
 end
 
 function RESPONSE:challenge(args)
-    log.err(args.result)
+    log.error(args.result)
 
     -- 使用DES算法，以secret做key，加密传输token串
     local etoken = crypt.desencode(self.secret, encode_token(self.token))
@@ -81,7 +81,7 @@ local function login(self)
 end
 
 function RESPONSE:login(args)
-    log.err("send ping")
+    log.error("send ping")
     self:send_request(
         "ping",
         {
@@ -91,12 +91,12 @@ function RESPONSE:login(args)
 end
 
 local function getcharacterlist(self)
-    log.err("send getcharacterlist")
+    log.error("send getcharacterlist")
     self:send_request("getcharacterlist")
 end
 
 local function charactercreate(self)
-    log.err("send charactercreate")
+    log.error("send charactercreate")
     local character_create = {
         name = self.name,
         job = 1,
@@ -106,7 +106,7 @@ local function charactercreate(self)
 end
 
 local function characterpick(self, uuid)
-    log.err("send characterpick :" .. uuid)
+    log.error("send characterpick :" .. uuid)
     self:send_request(
         "characterpick",
         {
@@ -116,12 +116,12 @@ local function characterpick(self, uuid)
 end
 
 local function mapready(self)
-    log.err("send mapready")
+    log.error("send mapready")
     self:send_request("mapready")
 end
 
 local function moveto(self, pos)
-    --log.err("send moveto")
+    --log.error("send moveto")
     self:send_request(
         "moveto",
         {
@@ -131,7 +131,7 @@ local function moveto(self, pos)
 end
 
 local function changemap(self)
-    log.err("send changemap")
+    log.error("send changemap")
     self:send_request(
         "changemap",
         {
@@ -145,7 +145,7 @@ local function quitgame(self)
 end
 
 function RESPONSE:ping(args)
-    log.err("ping:" .. tostring(args.ok))
+    log.error("ping:" .. tostring(args.ok))
 
     self.index = self.index + 1
     if self.index > 0 then
@@ -153,7 +153,7 @@ function RESPONSE:ping(args)
         return
     end
     -- 断开连接
-    log.err("disconnect")
+    log.error("disconnect")
     socket.close(self.fd)
 
     -- 再次连接到gameserver
@@ -161,7 +161,7 @@ function RESPONSE:ping(args)
 end
 
 function RESPONSE:getcharacterlist(args)
-    log.err("getcharacterlist size:" .. table.size(args.character))
+    log.error("getcharacterlist size:" .. table.size(args.character))
     if (table.size(args.character) < 1) then
         charactercreate(self)
     else
@@ -177,7 +177,7 @@ function RESPONSE:getcharacterlist(args)
         end
         if not bpick then
             for k, v in pairs(args.character) do
-                log.err("getcharacterlist size > 1:"..self.name.." "..v.name)
+                log.error("getcharacterlist size > 1:"..self.name.." "..v.name)
             end
             
             --charactercreate(self)
@@ -186,7 +186,7 @@ function RESPONSE:getcharacterlist(args)
 end
 
 function RESPONSE:charactercreate(args)
-    log.err("charactercreate:")
+    log.error("charactercreate:")
     getcharacterlist(self)
 end
 
@@ -196,7 +196,7 @@ function RESPONSE:characterpick(args)
 end
 
 function RESPONSE:mapready(args)
-    log.err("mapready:")
+    log.error("mapready:")
     local pos = {
         x = 1,
         y = 2,
@@ -206,7 +206,7 @@ function RESPONSE:mapready(args)
 end
 
 function RESPONSE:moveto(args)
-    --log.err("moveto:")
+    --log.error("moveto:")
     if not self.bchangemap then
         changemap(self)
     else
@@ -259,15 +259,15 @@ function RESPONSE:changemap(args)
 end
 
 function RESPONSE:quitgame(args)
-    log.err("quitgame:")
-    log.err(args.ok)
+    log.error("quitgame:")
+    log.error(args.ok)
 end
 
 function REQUEST:subid(args)
     -- 收到服务器发来的确认信息
     local result = args.result
     local code = tonumber(string.sub(result, 1, 3))
-    log.err("login subid result " .. result)
+    log.error("login subid result " .. result)
     -- 当确认成功的时候，断开与服务器的连接
     assert(code == 200)
     socket.close(self.fd)
@@ -275,40 +275,40 @@ function REQUEST:subid(args)
     -- 通过确认信息获取subid
     self.subid = crypt.base64decode(string.sub(result, 5))
 
-    --log.err("login ok, subid=" .. self.subid)
+    --log.error("login ok, subid=" .. self.subid)
     self.gateip = args.gateip
     self.gateport = args.gateport
     login(self)
 end
 
 function REQUEST:heartbeat()
-    log.err("===heartbeat===")
+    log.error("===heartbeat===")
 end
 
 function REQUEST:characterupdate(args)
-    -- log.err("characterupdate:")
+    -- log.error("characterupdate:")
 end
 
 function REQUEST:characterleave(args)
-    -- log.err("characterleave:")
+    -- log.error("characterleave:")
 end
 
 function REQUEST:delaytest(args)
-    log.err("delaytest")
-    -- log.err(args)
+    log.error("delaytest")
+    -- log.error(args)
     return {
         time = args.time
     }
 end
 
 function REQUEST:delayresult(args)
-    log.err("delayresult:" .. args.time)
+    log.error("delayresult:" .. args.time)
 end
 
 function REQUEST:moveto(args)
     local move = args.move
     -- for _,v in pairs(move) do
-    --	log.err(v)
+    --	log.error(v)
     -- end
 end
 

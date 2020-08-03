@@ -1,8 +1,8 @@
 local skynet = require "skynet"
 local dbtableconfig = require "config.dbtableconfig"
 local mysqlconf = require "config.mysqlconf"
-local account = require "db.account"
-local playerdate = require "db.playerdate"
+local tbl_account = require "db.tbl_account"
+local tbl_character = require "db.tbl_character"
 local log = require "syslog"
 
 local CMD = {}
@@ -574,8 +574,8 @@ function system.open()
     end
 
     load_schema_to_redis()
-    module_init("account", account)
-    module_init("playerdate", playerdate)
+    module_init("tbl_account", tbl_account)
+    module_init("tbl_character", tbl_character)
 end
 
 function system.close()

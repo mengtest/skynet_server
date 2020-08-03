@@ -113,7 +113,7 @@ function CMD.save()
         z = pos.z,
         data = packer.pack(character:getdata())
     }
-    return skynet.call(dbmgr, "lua", "playerdate", "save", savedata)
+    return skynet.call(dbmgr, "lua", "tbl_character", "save", savedata)
 end
 
 -- gate 通知 agent 有玩家正在认证

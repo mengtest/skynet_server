@@ -1,48 +1,28 @@
-/*
-Navicat MySQL Data Transfer
 
-Source Server         : mysql_test
-Source Server Version : 50554
-Source Host           : localhost:3306
-Source Database       : test
+SET FOREIGN_KEY_CHECKS = 0;
 
-Target Server Type    : MYSQL
-Target Server Version : 50554
-File Encoding         : 65001
-
-Date: 2017-03-10 03:16:23
-*/
-
-SET FOREIGN_KEY_CHECKS=0;
-
--- ----------------------------
--- Table structure for account
--- ----------------------------
-DROP TABLE IF EXISTS `account`;
-CREATE TABLE `account` (
-  `uid` varchar(255) NOT NULL,
-  `createtime` varchar(255) NOT NULL,
-  `logintime` varchar(255) NOT NULL,
+-- 账号表
+CREATE TABLE `tbl_account` (
+  `uid` varchar(64) NOT NULL COMMENT '账号',
+  `createtime` DATETIME NOT NULL COMMENT '创建时间',
+  `logintime` DATETIME NOT NULL COMMENT '登陆时间',
   PRIMARY KEY (`uid`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- ----------------------------
--- Table structure for playerdate
--- ----------------------------
-DROP TABLE IF EXISTS `playerdate`;
-CREATE TABLE `playerdate` (
-  `uid` varchar(255) NOT NULL,
-  `name` varchar(64) NOT NULL,
-  `uuid` bigint(20) NOT NULL,
-  `sex` tinyint(4) NOT NULL,
-  `job` tinyint(4) NOT NULL,
-  `level` int(11) NOT NULL,
-  `createtime` varchar(255) NOT NULL,
-  `logintime` varchar(255) NOT NULL,
-  `mapid` int(11) NOT NULL,
-  `x` float(32,0) NOT NULL,
-  `y` float(32,0) NOT NULL,
-  `z` float(32,0) NOT NULL,
-  `data` mediumtext NOT NULL,
+-- 角色表
+CREATE TABLE `tbl_character` (
+  `uid` varchar(64) NOT NULL COMMENT '账号',
+  `uuid` bigint(64)  unsigned NOT NULL COMMENT '唯一id',
+  `name` varchar(64) NOT NULL COMMENT '角色名称',
+  `sex` tinyint(1) unsigned NOT NULL COMMENT '性别',
+  `job` tinyint(4) unsigned NOT NULL COMMENT '职业',
+  `level` int(8) unsigned NOT NULL COMMENT '等级',
+  `createtime` DATETIME NOT NULL COMMENT '创建时间',
+  `logintime` DATETIME NOT NULL COMMENT '登陆时间',
+  `mapid` int(32) unsigned NOT NULL COMMENT '所在地图',
+  `x` float(32,0) NOT NULL COMMENT '坐标x',
+  `y` float(32,0) NOT NULL COMMENT '坐标y',
+  `z` float(32,0) NOT NULL COMMENT '坐标z',
+  `data` mediumtext NOT NULL COMMENT '数据',
   PRIMARY KEY (`uuid`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

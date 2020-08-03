@@ -26,7 +26,7 @@ local function load_name()
     while true do
         sql =
             string.format(
-            "select name from playerdate limit %d, 1000",
+            "select name from tbl_character limit %d, 1000",
             offset
         )
 

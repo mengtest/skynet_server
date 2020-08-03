@@ -1,13 +1,11 @@
 local skynet = require "skynet"
 local config = require "config.dbconfig"
-local profile = require "skynet.profile"
 local log = require "syslog"
 local cluster = require "skynet.cluster"
 
 skynet.start(
     function()
         log.debug("DB Server start")
-        profile.start()
         -- 启动后台
         skynet.newservice("debug_console", config.debug_port)
 
@@ -24,7 +22,7 @@ skynet.start(
         -- 注册节点
         cluster.open("db")
 
-        log.debug("start server cost time:" .. profile.stop())
+        log.debug("start server cost time:" .. skynet.now())
         skynet.exit()
     end
 )

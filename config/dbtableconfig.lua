@@ -4,14 +4,14 @@ local conf = {}
 -- indexkey 用于生产redis集合数据的key
 -- indexvalue 用于集合排序的值
 -- columns 数据表字段
-conf["account"] = {
+conf["tbl_account"] = {
     rediskey = "uid",
     indexkey = nil,
     indexvalue = nil,
     columns = nil
 }
 
-conf["playerdate"] = {
+conf["tbl_character"] = {
     rediskey = "uuid",
     indexkey = "uid",
     indexvalue = nil,

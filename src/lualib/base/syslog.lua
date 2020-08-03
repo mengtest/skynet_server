@@ -53,7 +53,7 @@ function syslog.warning(...)
     write(4, ...)
 end
 
-function syslog.err(...)
+function syslog.error(...)
     write(5, ...)
 end
 

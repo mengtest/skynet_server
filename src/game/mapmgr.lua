@@ -12,15 +12,11 @@ end
 
 function CMD.open()
     local mapdata = sharetable.query "map"
-    local n = 1
-    while n > 0 do
-        for mapid, conf in pairs(mapdata) do
-            local m = skynet.newservice("map", conf.name)
-            skynet.call(m, "lua", "open", conf)
-            skynet.call(m, "lua", "init", conf)
-            mapinstance[mapid] = m
-        end
-        n = n - 1
+    for mapid, conf in pairs(mapdata) do
+        local m = skynet.newservice("map", conf.name)
+        skynet.call(m, "lua", "open", conf)
+        skynet.call(m, "lua", "init", conf)
+        mapinstance[mapid] = m
     end
 end
 

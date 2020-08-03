@@ -38,7 +38,7 @@ _handler:release(
 )
 
 local function loadlist()
-    local list = skynet.call(dbmgr, "lua", "playerdate", "getlist", user.uid)
+    local list = skynet.call(dbmgr, "lua", "tbl_character", "getlist", user.uid)
     if not list then
         list = {}
     end
@@ -58,6 +58,7 @@ function REQUEST.getcharacterlist()
 end
 
 local function create(name, job, sex)
+    local datetime = os.date("%Y-%m-%d %H:%M:%S")
     local character = {
         uid = user.uid,
         name = name,
@@ -65,8 +66,8 @@ local function create(name, job, sex)
         sex = sex,
         uuid = uuid.gen(),
         level = 1,
-        createtime = os.time(),
-        logintime = os.time(),
+        createtime = datetime,
+        logintime = datetime,
         mapid = 1,
         x = 0,
         y = 0,
@@ -105,7 +106,7 @@ function REQUEST.charactercreate(args)
     end
     
     local character = create(args.name, args.job, args.sex)
-    if skynet.call(dbmgr, "lua", "playerdate", "create", character) then
+    if skynet.call(dbmgr, "lua", "tbl_character", "create", character) then
         user.characterlist[character.uuid] = true
         log.debug("%s create character succ!", user.uid)
     else
@@ -159,7 +160,7 @@ function REQUEST.characterpick(args)
         return
     end
     local ret = false
-    local list = skynet.call(dbmgr, "lua", "playerdate", "load", user.uid, args.uuid)
+    local list = skynet.call(dbmgr, "lua", "tbl_character", "load", user.uid, args.uuid)
     if list.uuid then
         log.debug("%s pick character[%s] succ!", user.uid, list.name)
         user.characterlist = nil

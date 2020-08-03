@@ -30,7 +30,7 @@ function server.auth_handler(token)
 
     -- 数据库查询账号信息
     -- 没有就创建
-    local result = skynet.call(dbmgrserver, "lua", "account", "auth", user, password)
+    local result = skynet.call(dbmgrserver, "lua", "tbl_account", "auth", user, password)
     local str = "auth false"
     if result then
         str = "auth success"
