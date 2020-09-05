@@ -27,13 +27,12 @@ CSERVICE_OBJ = $(foreach v, $(CSERVICE_NAME), $(CSERVICE_PATH)/$(v).so)
 VPATH += $(LUACLIB_SRC_PATH)
 VPATH += $(CSERVICE_CSRC_PATH)
 
-linux macosx freebsd : submodule make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ)
-
-submodule:
-	git submodule update --init
+linux macosx freebsd : make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ)
 
 make3rd :
 	@$(MAKE) $(PLAT) -C $(SKYNET_ROOT) --no-print-directory
+	#lua-cjson需要指定lua的目录，这边用skynet自带的lua先生成一下
+	gcc -c -O3 -Wall -pedantic -DNDEBUG  -I./3rd/skynet/3rd/lua/ -fpic -o ./3rd/lua-cjson/lua_cjson.o ./3rd/lua-cjson/lua_cjson.c
 	@$(MAKE) -C $(LUA_CJSON_ROOT) --no-print-directory
 
 createdir:
