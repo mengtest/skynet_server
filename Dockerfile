@@ -7,9 +7,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     git \ 
     make \ 
     autoconf \
-    gcc \
     g++ \
-    readline \
     readline-dev
 
 #编译
@@ -22,10 +20,21 @@ COPY ./Makefile ./app/Makefile
 
 RUN cd app \
     && make cleanall && make linux \
-    && rm -rf Makefile src/lualib-src src/service-src\
+    && rm -rf Makefile src/lualib-src src/service-src \
     && cd ./3rd/skynet \
-    && rm -rf 3rd HISTORY.md LICENSE Makefile README.md lualib-src platform.mk service-src skynet-src test .git \
+    && rm -rf 3rd HISTORY.md LICENSE Makefile README.md lualib-src platform.mk service-src skynet-src test \
     && apk del .build-deps 
+    
+#更新lua、配置等文件
+FROM alpine:latest as server-sync
+
+COPY . /app
+COPY --from=server-built /app /app
+
+RUN cd app \
+    && rm -rf tools Dockerfile README.md Makefile src/lualib-src src/service-src .git .DS_Store \
+    && cd ./3rd/skynet \
+    && rm -rf 3rd HISTORY.md LICENSE Makefile README.md lualib-src platform.mk service-src skynet-src test .git
 
 #构建运行环境
 FROM alpine:latest as server-run
@@ -33,13 +42,7 @@ FROM alpine:latest as server-run
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories\
     && apk add --no-cache libgcc
 
-#更新lua、配置等文件
+#最终镜像
 FROM server-run
 
-COPY . ./app
-COPY --from=server-built /app /app
-
-RUN cd app \
-    && rm -rf tools Makefile Dockerfile README.md src/lualib-src src/service-src .git\
-    && cd ./3rd/skynet \
-    && rm -rf 3rd HISTORY.md LICENSE Makefile README.md lualib-src platform.mk service-src skynet-src test .git
+COPY --from=server-sync /app /app

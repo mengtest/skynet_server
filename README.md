@@ -5,10 +5,20 @@
 sudo apt-get install autoconf
 sudo apt-get install libreadline-dev
 
-git clone https://github.com/Ding8222/skynet_test.git
+git clone https://github.com/dingdalong/skynet_test.git
 cd skynet_test
 git submodule update --init
 make linux
+```
+
+
+```
+也可以使用docker构建
+git clone https://github.com/dingdalong/skynet_test.git
+cd skynet_test
+git submodule update --init
+docker build -t skynet .
+docker run -it skynet
 ```
 
 * 运行：
