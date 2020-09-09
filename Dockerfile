@@ -22,7 +22,7 @@ RUN cd app \
     && make cleanall && make linux \
     && rm -rf Makefile src/lualib-src src/service-src \
     && cd ./3rd/skynet \
-    && rm -rf 3rd HISTORY.md LICENSE Makefile README.md lualib-src platform.mk service-src skynet-src test \
+    && rm -rf 3rd Makefile lualib-src platform.mk service-src skynet-src test \
     && apk del .build-deps 
     
 #更新lua、配置等文件
@@ -32,9 +32,9 @@ COPY . /app
 COPY --from=server-built /app /app
 
 RUN cd app \
-    && rm -rf tools Dockerfile README.md Makefile src/lualib-src src/service-src .git .DS_Store \
+    && rm -rf tools Makefile src/lualib-src src/service-src \
     && cd ./3rd/skynet \
-    && rm -rf 3rd HISTORY.md LICENSE Makefile README.md lualib-src platform.mk service-src skynet-src test .git
+    && rm -rf 3rd Makefile lualib-src platform.mk service-src skynet-src test
 
 #构建运行环境
 FROM alpine:latest as server-run
@@ -45,4 +45,5 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 #最终镜像
 FROM server-run
 
+WORKDIR /app
 COPY --from=server-sync /app /app

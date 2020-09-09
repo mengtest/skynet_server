@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  skynet:
+    build: .
+    ports: 
+      - "8123:8123"
+    volumes:
+    - .:/app1
+    links: 
+    - redis
+    - mysql
+    depends_on: 
+    - redis
+    - mysql
+    command: ["/app/run.sh", "login"]
+  redis:
+    image: redis:alpine 
+    ports: 
+      - "6379:6379" 
+  mysql:
+    image: mysql:5.7.31
+    environment: 
+      MYSQL_ROOT_PASSWORD: root 
+      MYSQL_DATABASE: skynet 
+    ports: 
+      - "3306:3306"

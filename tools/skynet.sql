@@ -2,7 +2,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 账号表
-CREATE TABLE `tbl_account` (
+CREATE TABLE IF NOT EXISTS `tbl_account` (
   `uid` varchar(64) NOT NULL COMMENT '账号',
   `createtime` DATETIME NOT NULL COMMENT '创建时间',
   `logintime` DATETIME NOT NULL COMMENT '登陆时间',
@@ -10,7 +10,7 @@ CREATE TABLE `tbl_account` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- 角色表
-CREATE TABLE `tbl_character` (
+CREATE TABLE IF NOT EXISTS `tbl_character` (
   `uid` varchar(64) NOT NULL COMMENT '账号',
   `uuid` bigint(64)  unsigned NOT NULL COMMENT '唯一id',
   `name` varchar(64) NOT NULL COMMENT '角色名称',
