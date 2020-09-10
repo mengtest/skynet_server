@@ -1,25 +1,87 @@
 version: '3.8'
 services:
-  skynet:
+  db:
     build: .
-    ports: 
-      - "8123:8123"
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
     volumes:
-    - .:/app1
+    - ./gameconfig:/app/gameconfig
+    - ./serviceconfig:/app/serviceconfig
+    - ./pids:/app/pids
+    - ./proto:/app/proto
+    - ./script:/app/script
+    - ./logs:/app/logs
+    - ./run.sh:/app/run.sh
     links: 
     - redis
     - mysql
     depends_on: 
     - redis
     - mysql
+    command: ["/app/run.sh", "db"]
+  login:
+    build: .
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./gameconfig:/app/gameconfig
+    - ./serviceconfig:/app/serviceconfig
+    - ./pids:/app/pids
+    - ./proto:/app/proto
+    - ./script:/app/script
+    - ./logs:/app/logs
+    - ./run.sh:/app/run.sh
+    links: 
+    - db
     command: ["/app/run.sh", "login"]
+  game0:
+    build: .
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./gameconfig:/app/gameconfig
+    - ./serviceconfig:/app/serviceconfig
+    - ./pids:/app/pids
+    - ./proto:/app/proto
+    - ./script:/app/script
+    - ./logs:/app/logs
+    - ./run.sh:/app/run.sh
+    links: 
+    - login
+    - db
+    command: ["/app/run.sh", "game0"]
+  game1:
+    build: .
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./gameconfig:/app/gameconfig
+    - ./serviceconfig:/app/serviceconfig
+    - ./pids:/app/pids
+    - ./proto:/app/proto
+    - ./script:/app/script
+    - ./logs:/app/logs
+    - ./run.sh:/app/run.sh
+    links: 
+    - login
+    - db
+    command: ["/app/run.sh", "game1"]
   redis:
     image: redis:alpine 
+    environment: 
+      TZ: Asia/Shanghai
     ports: 
       - "6379:6379" 
+    volumes: 
+      - ./tools/redis.conf:/usr/local/etc/redis/redis.conf
   mysql:
     image: mysql:5.7.31
     environment: 
+      TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: root 
       MYSQL_DATABASE: skynet 
     ports: 

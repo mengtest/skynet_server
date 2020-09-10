@@ -18,3 +18,6 @@ LICENSE
 Dockerfile
 *.txt
 *.yml
+/examples
+/test
+/bin

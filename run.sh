@@ -27,4 +27,4 @@ do
 done
 
 
-$ROOT/3rd/skynet/skynet $ROOT/src/config/$name.config
+$ROOT/bin/skynet $ROOT/serviceconfig/launchconfig/$name.config

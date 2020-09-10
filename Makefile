@@ -4,12 +4,13 @@ SKYNET_ROOT ?= $(THIRD_LIB_ROOT)/skynet
 include $(SKYNET_ROOT)/platform.mk
 SKYNET_SRC ?= $(SKYNET_ROOT)/skynet-src
 LUA_INC ?= $(SKYNET_ROOT)/3rd/lua
+SERVICE_BIN ?=bin
 
 SHARED += -fPIC --shared
 CFLAGS += -g -O2 -Wall -I$(LUA_INC) -I$(SKYNET_SRC)
 
 #lua
-LUACLIB_PATH ?= src/luaclib
+LUACLIB_PATH ?= $(SERVICE_BIN)/luaclib
 LUACLIB_SRC_PATH ?= src/lualib-src
 
 #获取$(LUACLIB_SRC_PATH)目录下所有文件名
@@ -18,7 +19,7 @@ LUA_CLIB_NAME = $(patsubst lua-%.c, %, $(notdir $(wildcard $(LUACLIB_SRC_PATH)/*
 LUACLIB_OBJ = $(foreach v, $(LUA_CLIB_NAME), $(LUACLIB_PATH)/$(v).so)
 
 #service
-CSERVICE_PATH ?= src/cservice
+CSERVICE_PATH ?= $(SERVICE_BIN)/cservice
 CSERVICE_CSRC_PATH ?= src/service-src
 
 CSERVICE_NAME = caoi syslog
@@ -27,17 +28,23 @@ CSERVICE_OBJ = $(foreach v, $(CSERVICE_NAME), $(CSERVICE_PATH)/$(v).so)
 VPATH += $(LUACLIB_SRC_PATH)
 VPATH += $(CSERVICE_CSRC_PATH)
 
-linux macosx freebsd : make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ)
+linux macosx freebsd : make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ) copyfiles
 
 make3rd :
 	@$(MAKE) $(PLAT) -C $(SKYNET_ROOT) --no-print-directory
 	#lua-cjson需要指定lua的目录，这边用skynet自带的lua先生成一下
-	gcc -c -O3 -Wall -pedantic -DNDEBUG  -I./3rd/skynet/3rd/lua/ -fpic -o ./3rd/lua-cjson/lua_cjson.o ./3rd/lua-cjson/lua_cjson.c
+	gcc -c -O3 -Wall -pedantic -DNDEBUG  -I$(LUA_INC) -fpic -o $(LUA_CJSON_ROOT)/lua_cjson.o $(LUA_CJSON_ROOT)/lua_cjson.c
 	@$(MAKE) -C $(LUA_CJSON_ROOT) --no-print-directory
 
 createdir:
+	@mkdir -p $(SERVICE_BIN)
 	@mkdir -p $(LUACLIB_PATH)
 	@mkdir -p $(CSERVICE_PATH)
+	@mkdir -p $(SERVICE_BIN)/lua-cjson
+
+copyfiles:
+	@cp -rf $(SKYNET_ROOT)/skynet $(SERVICE_BIN)
+	@cp -rf $(LUA_CJSON_ROOT)/cjson.so $(SERVICE_BIN)/lua-cjson
 
 $(LUACLIB_OBJ) : $(LUACLIB_PATH)/%.so : lua-%.c 
 	@echo "	$@"
@@ -52,7 +59,7 @@ $(CSERVICE_PATH)/%.so : service_%.c
 	@$(CC) $(CFLAGS) $(SHARED) $^ -o $@
 
 clean :
-	$(RM) $(LUACLIB_OBJ) $(CSERVICE_OBJ)
+	$(RM) -rf $(LUACLIB_OBJ) $(CSERVICE_OBJ) $(SERVICE_BIN)
 
 cleanall: clean
 	@$(MAKE) -C $(LUA_CJSON_ROOT) clean --no-print-directory

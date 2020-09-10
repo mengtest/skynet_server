@@ -13,12 +13,11 @@ make linux
 
 
 ```
-也可以使用docker构建
+也可以使用docker-compose构建并启动
 git clone https://github.com/dingdalong/skynet_test.git
 cd skynet_test
 git submodule update --init
-docker build -t skynet .
-docker run -it skynet
+docker-compose up -d
 ```
 
 * 运行：
