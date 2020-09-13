@@ -49,7 +49,7 @@ syslog_release(struct logger * inst) {
 }
 
 void
-genfilename(struct logger * inst, time_t now) {
+gen_file_name(struct logger * inst, time_t now) {
 	char filename[128] = {0};
 	char dirname[128] = {0};
 	struct tm tm;
@@ -92,7 +92,7 @@ genfilename(struct logger * inst, time_t now) {
 }
 
 bool
-trycreate_newlogfile(struct logger * inst, time_t now){
+try_create_new_log_file(struct logger * inst, time_t now){
 	if(inst->pathname == NULL)
 		return false;
 
@@ -101,13 +101,13 @@ trycreate_newlogfile(struct logger * inst, time_t now){
 		inst->filetime = now/FILE_TIME;
 		inst->index = 0;
 		inst->filesize = 0;
-		genfilename(inst, now);
+		gen_file_name(inst, now);
 		return true;
 	}
 	else if(inst->filesize >= DEFAULT_ROLL_SIZE)
 	{
 		inst->filesize = 0;
-		genfilename(inst, now);
+		gen_file_name(inst, now);
 		return true;
 	}
 	return false;
@@ -126,7 +126,7 @@ syslog_cb(struct skynet_context * context, void *ud, int type, int session, uint
 		{
 			struct tm tm;
 			time_t now = time(NULL);
-			if(trycreate_newlogfile(inst, now))
+			if(try_create_new_log_file(inst, now))
 			{
 				fclose(inst->handle);
 				inst->handle = fopen(inst->filename,"a");
@@ -191,7 +191,7 @@ syslog_init(struct logger * inst, struct skynet_context *ctx, const char * parm)
 			skynet_free(inst->pathname);
 			return 1;
 		}
-		trycreate_newlogfile(inst, time(NULL));
+		try_create_new_log_file(inst, time(NULL));
 		inst->handle = fopen(inst->filename,"a");
 		if (inst->handle == NULL) {
 			skynet_free(inst->filename);

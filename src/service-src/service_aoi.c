@@ -39,11 +39,11 @@ my_alloc(void * ud, void *ptr, size_t sz) {
 }
 
 static void
-callbackmessage(void *ud, uint32_t watcher, uint32_t marker) {
+call_back_message(void *ud, uint32_t watcher, uint32_t marker) {
 	struct aoi_space_plus * space_plus = ud;
 
 	char temp[64];
-	int n = sprintf(temp, "aoicallback %d %d", watcher, marker);
+	int n = sprintf(temp, "aoi_callback %d %d", watcher, marker);
 	skynet_send(space_plus->ctx, 0, space_plus->map_handle, PTYPE_TEXT, 0, temp, n);
 }
 
@@ -105,7 +105,7 @@ _ctrl(struct skynet_context * ctx, struct aoi_space_plus * space_plus, const voi
 		return;
 	}
 	if (memcmp(command,"message",i)==0) {
-		aoi_message(space_plus->space, callbackmessage, space_plus);
+		aoi_message(space_plus->space, call_back_message, space_plus);
 		return;
 	}
 	skynet_error(ctx, "[aoi] Unkown command : %s", command);

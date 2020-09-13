@@ -1,9 +1,9 @@
 local files = {
     "job",
     "map",
-    "createmonster",
+    "create_monster",
     "instance",
-    "instancemonster",
+    "instance_monster",
 }
 
 return files

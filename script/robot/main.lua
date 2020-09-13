@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local protopatch = require "serviceconfig.protopatch"
+local proto_patch = require "service_config.proto_patch"
 local log = require "syslog"
 
 skynet.start(
@@ -8,23 +8,23 @@ skynet.start(
 
         -- 加载解析proto文件
         local proto = skynet.uniqueservice "protoloader"
-        skynet.call(proto, "lua", "load", protopatch)
+        skynet.call(proto, "lua", "load", proto_patch)
 
-        local totalmgr = 1
-        local robotcount = 1
-        local robotmgr = {}
+        local total_mgr = 2
+        local robot_count = 2
+        local robot_mgr = {}
         -- 启动N个服务
-        for _ = 1, totalmgr do
-            table.insert(robotmgr, skynet.newservice("robotmgr"))
+        for _ = 1, total_mgr do
+            table.insert(robot_mgr, skynet.newservice("robot_mgr"))
         end
 
         --每个服务生成N个机器人
-        for k, v in pairs(robotmgr) do
-            skynet.call(v, "lua", "init", k - 1, robotcount, "game1", "login", 8101)
+        for k, v in pairs(robot_mgr) do
+            skynet.call(v, "lua", "init", k - 1, robot_count, "game1", "login", 8101)
         end
 
         --机器人Run
-        for _, v in pairs(robotmgr) do
+        for _, v in pairs(robot_mgr) do
             skynet.call(v, "lua", "start")
         end
 

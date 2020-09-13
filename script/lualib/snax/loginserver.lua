@@ -62,7 +62,7 @@ local function read_msg(fd)
     return host:dispatch(msg)
 end
 
-local function sendrequest(service, fd, name, args)
+local function send_request(service, fd, name, args)
     local str = request(name, args)
     write(service, fd, str)
 end
@@ -186,7 +186,7 @@ local function accept(conf, s, fd, addr)
     -- 根据认证结果
     if not ok then
         if ok ~= nil then
-            sendrequest(
+            send_request(
                 "response 401",
                 fd,
                 "subid",
@@ -200,7 +200,7 @@ local function accept(conf, s, fd, addr)
 
     if not conf.multilogin then
         if user_login[uid] then
-            sendrequest(
+            send_request(
                 "response 406",
                 fd,
                 "subid",
@@ -215,24 +215,24 @@ local function accept(conf, s, fd, addr)
     end
 
     -- 通知gameserver登陆
-    local ok, err, _gateip, _gateport = pcall(conf.login_handler, server, uid, secret)
+    local ok, err, _gate_ip, _gate_port = pcall(conf.login_handler, server, uid, secret)
     -- unlock login
     user_login[uid] = nil
 
     if ok then
         err = err or ""
-        sendrequest(
+        send_request(
             "response 200",
             fd,
             "subid",
             {
                 result = "200 " .. crypt.base64encode(err),
-                gateip = _gateip,
-                gateport = _gateport
+                gate_ip = _gate_ip,
+                gate_port = _gate_port
             }
         )
     else
-        sendrequest(
+        send_request(
             "response 403",
             fd,
             "subid",

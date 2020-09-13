@@ -1,6 +1,6 @@
 local service = require "service"
 local redis = require "skynet.db.redis"
-local config = require "serviceconfig.redisconf"
+local config = require "service_config.redis_conf"
 local log = require "syslog"
 
 local CMD = {}
@@ -47,7 +47,7 @@ local function hash_num(num)
     return hash
 end
 
-local function getconn(key)
+local function get_conn(key)
     if key == nil then
         return center
     end
@@ -68,7 +68,7 @@ end
 
 -- 将哈希表key中的域filed的值设置为value
 function CMD.hset(uid, key, filed, value)
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:hset(key, filed, value)
 
     return result
@@ -80,7 +80,7 @@ function CMD.hget(uid, key, filed)
         return
     end
 
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:hget(key, filed)
 
     return result
@@ -94,7 +94,7 @@ function CMD.hmset(uid, key, t)
         table.insert(data, v)
     end
 
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:hmset(key, table.unpack(data))
 
     return result
@@ -106,7 +106,7 @@ function CMD.hmget(uid, key, ...)
         return
     end
 
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:hmget(key, ...)
 
     return result
@@ -114,7 +114,7 @@ end
 
 -- 返回哈希表key中，所有域和值(域，值，域，值...)
 function CMD.hgetall(uid, key)
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:hgetall(key)
 
     return result
@@ -122,14 +122,14 @@ end
 
 -- 将分数-成员添加到有序表key中
 function CMD.zadd(uid, key, score, member)
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:zadd(key, score, member)
 
     return result
 end
 
 function CMD.zrange(uid, key, from, to)
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:zrange(key, from, to)
 
     return result
@@ -137,7 +137,7 @@ end
 
 -- 删除key
 function CMD.del(uid, key)
-    local db = getconn(uid)
+    local db = get_conn(uid)
     local result = db:del(key)
 
     return result

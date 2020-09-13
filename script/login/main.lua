@@ -1,6 +1,6 @@
 local skynet = require "skynet"
-local config = require "serviceconfig.loginconfig"
-local protopatch = require "serviceconfig.protopatch"
+local config = require "service_config.login_config"
+local proto_patch = require "service_config.proto_patch"
 local log = require "syslog"
 local cluster = require "skynet.cluster"
 
@@ -12,7 +12,7 @@ skynet.start(
 
         -- 加载解析proto文件
         local proto = skynet.uniqueservice "protoloader"
-        skynet.call(proto, "lua", "load", protopatch)
+        skynet.call(proto, "lua", "load", proto_patch)
 
         -- 启动登录服务器
         local loginservice = skynet.uniqueservice("logind")

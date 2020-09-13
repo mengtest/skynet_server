@@ -4,12 +4,12 @@ local log = require "syslog"
 
 local queue = {}
 local CMD = {}
-local mysqlpool
+local mysql_pool
 
 local traceback = debug.traceback
 
 local function execute(sql)
-    local ok, ret = xpcall(skynet.call, traceback, mysqlpool, "lua", "execute", sql, true)
+    local ok, ret = xpcall(skynet.call, traceback, mysql_pool, "lua", "execute", sql, true)
     if not ok then
         log.warning("execute sql failed : %s", sql)
         return false
@@ -39,11 +39,11 @@ end
 
 function CMD.open()
     skynet.fork(sync_impl)
-    mysqlpool = skynet.uniqueservice("mysqlpool")
+    mysql_pool = skynet.uniqueservice("mysql_pool")
 end
 
 function CMD.close()
-    log.notice("close dbsync...")
+    log.notice("close db_sync...")
 end
 
 function CMD.sync(sql, now)

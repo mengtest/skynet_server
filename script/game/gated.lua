@@ -8,11 +8,11 @@ local server = {}
 local users = {}
 local username_map = {}
 local internal_id = 0
-local agentpool
+local agent_pool
 local servername
-local mapmgr
-local gateip
-local gateport
+local map_mgr
+local gate_ip
+local gate_port
 
 -- login server disallow multi login, so login_handler never be reentry
 -- call by login server
@@ -26,7 +26,7 @@ function server.login_handler(uid, secret)
     local id = internal_id -- don't use internal_id directly
     local username = msgserver.username(uid, id, servername)
     -- agent pool
-    local agent = skynet.call(agentpool, "lua", "getagentaddress")
+    local agent = skynet.call(agent_pool, "lua", "get_agent_address")
 
     local u = {
         username = username,
@@ -47,7 +47,7 @@ function server.login_handler(uid, secret)
     msgserver.login(username, secret)
 
     -- you should return unique subid
-    return id, gateip, gateport
+    return id, gate_ip, gate_port
 end
 
 -- call by self
@@ -108,24 +108,24 @@ end
 -- 通过对gate发送open请求的时候
 -- 在msgserver的open中调用了
 function server.register_handler(conf)
-    gateip = assert(conf.publicaddress)
-    gateport = assert(conf.port)
+    gate_ip = assert(conf.public_address)
+    gate_port = assert(conf.port)
     servername = assert(conf.servername)
-    mapmgr = skynet.uniqueservice("mapmgr")
-    skynet.call(mapmgr, "lua", "open")
+    map_mgr = skynet.uniqueservice("map_mgr")
+    skynet.call(map_mgr, "lua", "open")
     
-    agentpool = skynet.uniqueservice("agentpool")
-    skynet.call(agentpool, "lua", "open", conf.agentpool, skynet.self())
+    agent_pool = skynet.uniqueservice("agent_pool")
+    skynet.call(agent_pool, "lua", "open", conf.agent_pool, skynet.self())
 
-    local instancemgr = skynet.uniqueservice("instancemgr")
-    skynet.call(instancemgr, "lua", "open", conf.agentpool)
+    local instance_mgr = skynet.uniqueservice("instance_mgr")
+    skynet.call(instance_mgr, "lua", "open", conf.agent_pool)
 end
 
 -- 退出服务
 function server.close_handler()
     log.notice("close gated...")
     -- 这边通知所有服务退出
-    skynet.call(mapmgr, "lua", "close")
+    skynet.call(map_mgr, "lua", "close")
 end
 
 -- 向msgserver注册前面server中定义的方法

@@ -1,17 +1,17 @@
 local skynet = require "skynet"
-local msgsender = require "msgsender"
+local msg_sender = require "msg_sender"
 require "skynet.manager"
 local util = require "util"
-local settimeout = util.settimeout
+local set_timeout = util.set_timeout
 
-local idmgr = require "idmgr"
+local id_mgr = require "id_mgr"
 local log = require "syslog"
-local basemap = require "map.basemap"
-local aoimgr = require "map.aoimgr"
-local monstermgr = require "map.monstermgr"
-local createmonstermgr = require "map.createmonstermgr"
+local base_map = require "map.base_map"
+local aoi_mgr = require "map.aoi_mgr"
+local monster_mgr = require "map.monster_mgr"
+local create_monster_mgr = require "map.create_monster_mgr"
 
-local CMD = basemap.cmd()
+local CMD = base_map.cmd()
 local update_thread
 local config
 
@@ -27,36 +27,36 @@ skynet.register_protocol {
 }
 
 -- 0.1秒更新一次
-local function maprun()
-    monstermgr.monsterrun()
-    aoimgr.update()
-    update_thread = settimeout(10, maprun)
+local function map_run()
+    monster_mgr.monster_run()
+    aoi_mgr.update()
+    update_thread = set_timeout(10, map_run)
 end
 
 -- 获取临时id
-function CMD.gettempid()
-    return idmgr.createid()
+function CMD.get_temp_id()
+    return id_mgr.create_id()
 end
 
 -- 角色移动
-function CMD.moveto(aoiobj)
+function CMD.moveto(aoi_obj)
     -- TODO 这边应该检查pos的合法性
-    CMD.characterenter(aoiobj)
-    return true, aoiobj.movement.pos
+    CMD.character_enter(aoi_obj)
+    return true, aoi_obj.movement.pos
 end
 
 function CMD.init(conf)
-    createmonstermgr.init(conf.name)
-    createmonstermgr:createmonster()
-    skynet.fork(maprun)
+    create_monster_mgr.init(conf.name)
+    create_monster_mgr:create_monster()
+    skynet.fork(map_run)
 end
 
 function CMD.open(conf)
     config = conf
-    msgsender.init()
-    idmgr.setmaxid(conf.maxtempid)
-    basemap.init(conf)
-    aoimgr.init(assert(skynet.launch("caoi", skynet.self())))
+    msg_sender.init()
+    id_mgr.set_max_id(conf.max_temp_id)
+    base_map.init(conf)
+    aoi_mgr.init(assert(skynet.launch("caoi", skynet.self())))
 end
 
 function CMD.close()
@@ -72,7 +72,7 @@ skynet.init(
 )
 
 skynet.info_func(function()
-    return CMD.aoiinfo()
+    return CMD.aoi_info()
 end)
 
 skynet.start(

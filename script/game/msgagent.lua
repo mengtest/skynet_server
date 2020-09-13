@@ -1,9 +1,9 @@
 local skynet = require "skynet"
 local queue = require "skynet.queue"
 local log = require "syslog"
-local msgsender = require "msgsender"
+local msg_sender = require "msg_sender"
 local packer = require "db.packer"
-local testhandler = require "agent.testhandler"
+local test_handler = require "agent.test_handler"
 local character_handler = require "agent.character_handler"
 local map_handler = require "agent.map_handler"
 local aoi_handler = require "agent.aoi_handler"
@@ -11,15 +11,15 @@ local move_handler = require "agent.move_handler"
 local cluster = require "skynet.cluster"
 
 local gate = tonumber(...)
-local luaqueue = queue()
+local lua_queue = queue()
 local CMD = {}
 
 local user
 local host
-local dbmgr
+local db_mgr
 
 -- 当请求退出和被T出的时候
--- 因为请求消息在requestqueue，而被T的消息在luaqueue中
+-- 因为请求消息在requestqueue，而被T的消息在lua_queue中
 -- 这边可能重入
 local function logout(type)
     if not user then
@@ -28,10 +28,10 @@ local function logout(type)
     log.notice("logout, agent(:%08X) type(%d) subid(%d)", skynet.self(), type, user.subid)
 
     if user.character ~= nil then
-        local map = user.character:getmapaddress()
+        local map = user.character:get_map_address()
         if map then
-            user.character:setmapaddress(nil)
-            skynet.send(map, "lua", "characterleave", user.character:getaoiobj())
+            user.character:set_map_address(nil)
+            skynet.send(map, "lua", "character_leave", user.character:get_aoi_obj())
             -- 在玩家被挤下线的时候，这边可能还没有init
             -- 所以要放在这边release
             map_handler:unregister(user)
@@ -40,7 +40,7 @@ local function logout(type)
         end
     end
     CMD.save()
-    testhandler:unregister(user)
+    test_handler:unregister(user)
     character_handler:unregister(user)
     skynet.send(gate, "lua", "logout", user.uid, user.subid, skynet.self())
     user = nil
@@ -51,7 +51,7 @@ end
 local traceback = debug.traceback
 -- 接受到的请求
 local REQUEST = {}
-local function handlerequest(name, args, response)
+local function handle_request(name, args, response)
     -- log.warning ("get handle_request from client: %s", name)
     local f = REQUEST[name]
     if f then
@@ -79,7 +79,7 @@ skynet.register_protocol {
     end,
     dispatch = function(_, _, type, ...)
         if type == "REQUEST" then
-            local result = luaqueue(handlerequest, ...)
+            local result = lua_queue(handle_request, ...)
             if result then
                 skynet.ret(result)
             end
@@ -99,21 +99,21 @@ function CMD.save()
         return
     end
 
-    local pos = character:getpos()
-    local savedata = {
-        uid = character:getuid(),
-        name = character:getname(),
-        job = character:getjob(),
-        sex = character:getsex(),
-        uuid = character:getuuid(),
-        level = character:getlevel(),
-        mapid = character:getmapid(),
+    local pos = character:get_pos()
+    local save_data = {
+        uid = character:get_uid(),
+        name = character:get_name(),
+        job = character:get_job(),
+        sex = character:get_sex(),
+        uuid = character:get_uuid(),
+        level = character:get_level(),
+        map_id = character:get_map_id(),
         x = pos.x,
         y = pos.y,
         z = pos.z,
-        data = packer.pack(character:getdata())
+        data = packer.pack(character:get_data())
     }
-    return skynet.call(dbmgr, "lua", "tbl_character", "save", savedata)
+    return skynet.call(db_mgr, "lua", "tbl_character", "save", save_data)
 end
 
 -- gate 通知 agent 有玩家正在认证
@@ -125,9 +125,9 @@ function CMD.login(source, uid, sid, secret, fd)
         subid = sid,
         REQUEST = {},
         CMD = CMD,
-        sendrequest = sendrequest
+        send_request = send_request
     }
-    dbmgr = cluster.proxy("db", "@dbmgr")
+    db_mgr = cluster.proxy("db", "@db_mgr")
 end
 
 -- gate 通知 agent 认证成功
@@ -135,10 +135,10 @@ function CMD.auth(source, fd)
     user.fd = fd
 
     REQUEST = user.REQUEST
-    msgsender.init()
-    host = msgsender.gethost()
+    msg_sender.init()
+    host = msg_sender.get_host()
     -- you may load user data from database
-    testhandler:register(user)
+    test_handler:register(user)
     character_handler:register(user)
 end
 
@@ -162,30 +162,30 @@ end
 
 -- 发送广播消息给client
 -- 消息名，参数列表，是否发送给指定对象，是否广播，广播时是否排除自己
-function sendrequest(name, args, ref, not_send_to_me, fdlist)
-    if fdlist then
+function send_request(name, args, ref, not_send_to_me, fd_list)
+    if fd_list then
         -- 广播给指定列表中的对象
-        msgsender.sendboardrequest(name, args, fdlist, user.character)
+        msg_sender.send_board_request(name, args, fd_list, user.character)
     else
         if ref then
             if not_send_to_me then
                 -- 广播消息不发送给自己
-                msgsender.sendboardrequest(name, args, user.character:getaoilist(), user.character)
+                msg_sender.send_board_request(name, args, user.character:get_aoi_list(), user.character)
             else
                 -- 广播消息发送给自己
-                fdlist = user.character:getaoilist()
-                table.insert(fdlist, user.character:getaoiobj())
-                msgsender.sendboardrequest(name, args, fdlist, user.character)
+                fd_list = user.character:get_aoi_list()
+                table.insert(fd_list, user.character:get_aoi_obj())
+                msg_sender.send_board_request(name, args, fd_list, user.character)
             end
         else
             -- 发送消息给自己
-            user.character:sendrequest(name, args)
+            user.character:send_request(name, args)
         end
     end
 end
 
 skynet.info_func(function()
-    return "aoilist:"..table.size(user.character:getaoilist())
+    return "aoi_list:"..table.size(user.character:get_aoi_list())
 end)
 
 skynet.start(
@@ -195,7 +195,7 @@ skynet.start(
             "lua",
             function(_, source, command, ...)
                 local f = assert(CMD[command], command)
-                skynet.ret(skynet.pack(luaqueue(f, source, ...)))
+                skynet.ret(skynet.pack(lua_queue(f, source, ...)))
             end
         )
     end

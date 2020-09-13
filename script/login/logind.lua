@@ -1,13 +1,13 @@
 local login = require "snax.loginserver"
 local crypt = require "skynet.crypt"
 local skynet = require "skynet"
-local config = require "serviceconfig.loginconfig"
+local config = require "service_config.login_config"
 local log = require "syslog"
 local cluster = require "skynet.cluster"
 
 local server = config
 
-local dbmgrserver
+local db_mgrserver
 
 -- 服务器列表
 local server_list = {}
@@ -24,13 +24,13 @@ function server.auth_handler(token)
     password = crypt.base64decode(password)
     assert(password == "password", "Invalid password")
     log.debug("%s@%s is auth, password is %s", user, server, password)
-    if not dbmgrserver then
-        dbmgrserver = cluster.proxy("db", "@dbmgr")
+    if not db_mgrserver then
+        db_mgrserver = cluster.proxy("db", "@db_mgr")
     end
 
     -- 数据库查询账号信息
     -- 没有就创建
-    local result = skynet.call(dbmgrserver, "lua", "tbl_account", "auth", user, password)
+    local result = skynet.call(db_mgrserver, "lua", "tbl_account", "auth", user, password)
     local str = "auth false"
     if result then
         str = "auth success"
@@ -59,14 +59,14 @@ function server.login_handler(server, uid, secret)
     end
     
     -- 向服务器发送登陆请求
-    local subid, gateip, gateport = skynet.call(gated, "lua", "login", uid, secret)
+    local subid, gate_ip, gate_port = skynet.call(gated, "lua", "login", uid, secret)
     subid = tostring(subid)
     user_online[uid] = {
         gated = gated,
         subid = subid,
         server = server
     }
-    return subid, gateip, gateport
+    return subid, gate_ip, gate_port
 end
 
 local CMD = {}

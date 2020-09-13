@@ -3,28 +3,28 @@ local log = require "syslog"
 local sharetable = require "skynet.sharetable"
 
 local CMD = {}
-local mapinstance = {}
+local map_instance = {}
 
 -- 获取地图地址
-function CMD.getmapaddressbyid(mapid)
-    return mapinstance[mapid]
+function CMD.get_map_address_by_id(map_id)
+    return map_instance[map_id]
 end
 
 function CMD.open()
     local mapdata = sharetable.query "map"
-    for mapid, conf in pairs(mapdata) do
+    for map_id, conf in pairs(mapdata) do
         local m = skynet.newservice("map", conf.name)
         skynet.call(m, "lua", "open", conf)
         skynet.call(m, "lua", "init", conf)
-        mapinstance[mapid] = m
+        map_instance[map_id] = m
     end
 end
 
 function CMD.close()
-    log.notice("close mapmgr...")
-    for mapid, mapaddress in pairs(mapinstance) do
-        skynet.call(mapaddress, "lua", "close")
-        mapinstance[mapid] = nil
+    log.notice("close map_mgr...")
+    for map_id, map_address in pairs(map_instance) do
+        skynet.call(map_address, "lua", "close")
+        map_instance[map_id] = nil
     end
 end
 

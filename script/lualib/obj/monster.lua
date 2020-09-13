@@ -1,6 +1,6 @@
 local skynet = require "skynet"
-local basechar = require "obj.basechar"
-local enumtype = require "enumtype"
+local base_char = require "obj.base_char"
+local enum_type = require "enum_type"
 local random = math.random
 local _monster = {}
 local s_method = {
@@ -9,14 +9,14 @@ local s_method = {
 
 local function init_method(monster)
     -- 获取npcid
-    function monster:getid()
+    function monster:get_id()
         return self.id
     end
 
-    function monster:run(basemap)
-        if skynet.time() >= self.nextruntime then
-            self.nextruntime = skynet.time() + random(100) * 0.01
-            local pos = self:getpos()
+    function monster:run(base_map)
+        if skynet.time() >= self.next_run_time then
+            self.next_run_time = skynet.time() + random(100) * 0.01
+            local pos = self:get_pos()
             local n = random(10000)
             local datlex
             if n > 5000 then
@@ -43,27 +43,27 @@ local function init_method(monster)
             elseif pos.z < -300 then
                 pos.z = -300
             end
-            self:setpos(pos)
-            basemap.CMD.characterenter(self:getaoiobj())
+            self:set_pos(pos)
+            base_map.CMD.character_enter(self:get_aoi_obj())
         end
     end
 
-    basechar.expandmethod(monster)
+    base_char.expand_method(monster)
 end
 init_method(s_method.__index)
 
 -- 创建monster
 function _monster.create(id, x, y, z)
-    local monster = basechar.create(enumtype.CHAR_TYPE_MONSTER)
+    local monster = base_char.create(enum_type.CHAR_TYPE_MONSTER)
     monster = setmetatable(monster, s_method)
 
     -- monster特有属性
-    monster.nextruntime = 0
+    monster.next_run_time = 0
     -- 设置怪物的id
     monster.id = id
 
     -- 设置怪物的aoi对象
-    local aoiobj = {
+    local aoi_obj = {
         movement = {
             mode = "m",
             pos = {
@@ -73,7 +73,7 @@ function _monster.create(id, x, y, z)
             }
         }
     }
-    monster:setaoiobj(aoiobj)
+    monster:set_aoi_obj(aoi_obj)
     return monster
 end
 

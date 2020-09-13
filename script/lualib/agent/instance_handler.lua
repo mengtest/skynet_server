@@ -8,8 +8,8 @@ local REQUEST = {}
 local _handler = handler.new(REQUEST)
 
 local user
-local instanceaddress
-local instancemgr
+local instance_address
+local instance_mgr
 
 _handler:init(
     function(u)
@@ -20,44 +20,44 @@ _handler:init(
 _handler:release(
     function()
         user = nil
-        if instanceaddress ~= nil then
-            skynet.send(instanceaddress, "lua", "close")
-            instanceaddress = nil
+        if instance_address ~= nil then
+            skynet.send(instance_address, "lua", "close")
+            instance_address = nil
         end
     end
 )
 
 -- 请求进入副本
-function REQUEST.enterinstance(args)
-    assert(args.instanceid)
+function REQUEST.enter_instance(args)
+    assert(args.instance_id)
     local ok = false
     local data = sharetable.query "insatnce"
-    local insatncedata = data[args.instanceid]
-    if insatncedata ~= nil then
-        if instanceaddress == nil then
-            instancemgr = instancemgr or skynet.uniqueservice("instancemgr")
-            instanceaddress = skynet.call(instancemgr, "lua", "getinstanceaddress")
+    local insatnce_data = data[args.instance_id]
+    if insatnce_data ~= nil then
+        if instance_address == nil then
+            instance_mgr = instance_mgr or skynet.uniqueservice("instance_mgr")
+            instance_address = skynet.call(instance_mgr, "lua", "get_instance_address")
         end
 
-        if instanceaddress ~= nil then
-            skynet.call(instanceaddress, "lua", "init", insatncedata)
-            local tempid = skynet.call(instanceaddress, "lua", "gettempid")
-            if tempid > 0 then
-                user.character:setaoimode("w")
-                skynet.send(user.character:getmapaddress(), "lua", "characterleave", user.character:getaoiobj())
-                user.character:setmapaddress(instanceaddress)
-                user.character:settempid(tempid)
-                --user.character:setmapid(args.mapid)
+        if instance_address ~= nil then
+            skynet.call(instance_address, "lua", "init", insatnce_data)
+            local temp_id = skynet.call(instance_address, "lua", "get_temp_id")
+            if temp_id > 0 then
+                user.character:set_aoi_mode("w")
+                skynet.send(user.character:get_map_address(), "lua", "character_leave", user.character:get_aoi_obj())
+                user.character:set_map_address(instance_address)
+                user.character:set_temp_id(temp_id)
+                --user.character:set_map_id(args.map_id)
                 ok = true
-                log.debug("enterinstance and set tempid:" .. user.character:gettempid())
+                log.debug("enter_instance and set temp_id:" .. user.character:get_temp_id())
             else
-                log.debug("player enterinstance failed:" .. args.instanceid)
+                log.debug("player enter_instance failed:" .. args.instance_id)
             end
         else
-            log.debug("player get enterinstance address failed:" .. args.instanceid)
+            log.debug("player get enter_instance address failed:" .. args.instance_id)
         end
     else
-        log.debug("player enter instance failed, cannot find instance id:" .. args.instanceid)
+        log.debug("player enter instance failed, cannot find instance id:" .. args.instance_id)
     end
     return {
         ok = ok

@@ -12,7 +12,7 @@
 
 .character_info{
 	name 0 : string
-	tempid 1 : integer
+	temp_id 1 : integer
 	job 2 : integer
 	sex 3 : integer
 	level 4 : integer
@@ -20,7 +20,7 @@
 }
 
 .character_move{
-	tempid 0 : integer
+	temp_id 0 : integer
 	pos 1 : character_pos
 }
 
@@ -29,24 +29,24 @@ heartbeat 1 {}
 subid 2 {
 	request {
 		result 0 : string
-		gateip 1: string
-		gateport 2: integer
+		gate_ip 1: string
+		gate_port 2: integer
 	}
 }
 
-characterupdate 3 {
+character_update 3 {
 	request {
 		info 0 : character_info
 	}
 }
 
-characterleave 4 {
+character_leave 4 {
 	request {
-		tempid 0 : *integer
+		temp_id 0 : *integer
 	}
 }
 
-delaytest 5{
+delay_test 5{
 	request {
 		time 0 : integer
 	}
@@ -55,7 +55,7 @@ delaytest 5{
 	}
 }
 
-delayresult 6{
+delay_result 6{
 	request {
 		time 0 : integer
 	}

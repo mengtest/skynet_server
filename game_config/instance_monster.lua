@@ -1,4 +1,4 @@
-local instancemonster = {
+local instance_monster = {
     main = {
         {
             id = 100,
@@ -29,4 +29,4 @@ local instancemonster = {
     }
 }
 
-return instancemonster
+return instance_monster

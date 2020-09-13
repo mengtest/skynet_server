@@ -1,6 +1,6 @@
 local skynet = require "skynet"
-local dbtableconfig = require "serviceconfig.dbtableconfig"
-local mysqlconf = require "serviceconfig.mysqlconf"
+local db_table_config = require "service_config.db_table_config"
+local mysql_conf = require "service_config.mysql_conf"
 local tbl_account = require "db.tbl_account"
 local tbl_character = require "db.tbl_character"
 local log = require "syslog"
@@ -9,23 +9,23 @@ local CMD = {}
 local MODULE = {}
 local service = {}
 local servername = {
-    "redispool",
-    "mysqlpool",
-    "dbsync"
+    "redis_pool",
+    "mysql_pool",
+    "db_sync"
 }
 
 -- DB表结构
 -- schema[tablename] = { "pk","fields" = {fieldname = valuetype}}
 local schema = {}
 
-local dbname = mysqlconf.center.database
+local dbname = mysql_conf.center.database
 
 -- 向redis发送cmd请求
 -- 这里的uid主要用于在redis中选择redis server
 local function do_redis(args, uid)
     local cmd = assert(args[1])
     args[1] = uid
-    return skynet.call(service["redispool"], "lua", cmd, table.unpack(args))
+    return skynet.call(service["redis_pool"], "lua", cmd, table.unpack(args))
 end
 
 -- 获取table的主键
@@ -44,7 +44,7 @@ local function get_primary_key(tbname)
         "'"
     }
 
-    local t = skynet.call(service["mysqlpool"], "lua", "execute", table.concat(sql))
+    local t = skynet.call(service["mysql_pool"], "lua", "execute", table.concat(sql))
     return t[1]["column_name"]
 end
 
@@ -56,7 +56,7 @@ local function get_fields(tbname)
         dbname,
         tbname
     )
-    local rs = skynet.call(service["mysqlpool"], "lua", "execute", sql)
+    local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
     local fields = {}
     for _, row in pairs(rs) do
         local name = row["column_name"]
@@ -78,14 +78,14 @@ local function get_field_type(tbname, field)
         tbname,
         field
     )
-    local rs = skynet.call(service["mysqlpool"], "lua", "execute", sql)
+    local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
     return rs[1]["data_type"] or rs[1]["DATA_TYPE"]
 end
 
 -- 解析表中字段类型，文本类型为true，其他类型nil
 local function load_schema_to_redis()
     local sql = "select table_name from information_schema.tables where table_schema='" .. dbname .. "'"
-    local rs = skynet.call(service["mysqlpool"], "lua", "execute", sql)
+    local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
     for _, row in pairs(rs) do
         local tbname = row.table_name
         if tbname == nil then
@@ -121,19 +121,19 @@ local function convert_record(tbname, record)
     return record
 end
 
--- 将table row中的值，根据key的名称提取出来后组合成rediskey
-local function make_rediskey(row, key)
-    local rediskey = ""
+-- 将table row中的值，根据key的名称提取出来后组合成redis_key
+local function make_redis_key(row, key)
+    local redis_key = ""
     local fields = string.split(key, ",")
     for i, field in pairs(fields) do
         if i == 1 then
-            rediskey = row[field]
+            redis_key = row[field]
         else
-            rediskey = rediskey .. ":" .. row[field]
+            redis_key = redis_key .. ":" .. row[field]
         end
     end
 
-    return rediskey
+    return redis_key
 end
 
 -- 通过fields提供的k将t中的数据格式化
@@ -202,35 +202,35 @@ function CMD.load_data_impl(config, uid)
             end
         end
 
-        local rs = skynet.call(service["mysqlpool"], "lua", "execute", sql)
+        local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
         if #rs <= 0 then
             break
         end
         for _, row in pairs(rs) do
             -- 将mysql中读取到的信息添加到redis的哈希表中
-            local rediskey = make_rediskey(row, config.rediskey)
+            local redis_key = make_redis_key(row, config.redis_key)
             do_redis(
                 {
                     "hmset",
-                    tbname .. ":" .. rediskey,
+                    tbname .. ":" .. redis_key,
                     row
                 },
                 uid
             )
 
             -- 对需要排序的数据插入有序集合
-            if config.indexkey then
-                local indexkey = make_rediskey(row, config.indexkey)
-                local indexvalue = 0
-                if config.indexvalue then
-                    indexvalue = row[config.indexvalue]
+            if config.index_key then
+                local index_key = make_redis_key(row, config.index_key)
+                local index_value = 0
+                if config.index_value then
+                    index_value = row[config.index_value]
                 end
                 do_redis(
                     {
                         "zadd",
-                        tbname .. ":index:" .. indexkey,
-                        indexvalue,
-                        rediskey
+                        tbname .. ":index:" .. index_key,
+                        index_value,
+                        redis_key
                     },
                     uid
                 )
@@ -250,7 +250,7 @@ end
 
 -- 加user类型表单行数据到redis
 function CMD.load_user_single(tbname, uid)
-    local config = dbtableconfig[tbname]
+    local config = db_table_config[tbname]
     local data = CMD.load_data_impl(config, uid)
     assert(#data <= 1)
     if #data == 1 then
@@ -262,7 +262,7 @@ end
 
 -- 加user类型表多行数据到redis
 function CMD.load_user_multi(tbname, uid)
-    local config = dbtableconfig[tbname]
+    local config = db_table_config[tbname]
     local data = {}
     local t = CMD.load_data_impl(config, uid)
 
@@ -280,13 +280,13 @@ end
 -- 单条查询
 function CMD.execute_single(tbname, uid, fields)
     local result
-    local rediskey = tbname .. ":" .. uid
+    local redis_key = tbname .. ":" .. uid
     if fields then
         result =
             do_redis(
             {
                 "hmget",
-                rediskey,
+                redis_key,
                 table.unpack(fields)
             },
             uid
@@ -297,7 +297,7 @@ function CMD.execute_single(tbname, uid, fields)
             do_redis(
             {
                 "hgetall",
-                rediskey
+                redis_key
             },
             uid
         )
@@ -329,12 +329,12 @@ end
 -- 多条查询,当有id的时候，只提取多条中的一条
 function CMD.execute_multi(tbname, uid, id, fields)
     local result
-    local rediskey = tbname .. ":index:" .. uid
+    local redis_key = tbname .. ":index:" .. uid
     local ids =
         do_redis(
         {
             "zrange",
-            rediskey,
+            redis_key,
             0,
             -1
         },
@@ -444,31 +444,31 @@ end
 -- redis中增加一行记录，默认同步到mysql
 -- 表名，列名，立刻同步到数据库，不同步到数据库
 function CMD.insert(tbname, row, immed, nosync)
-    local config = dbtableconfig[tbname]
+    local config = db_table_config[tbname]
     local uid = row.uid
-    local key = config.rediskey
+    local key = config.redis_key
 
-    local rediskey = make_rediskey(row, key)
+    local redis_key = make_redis_key(row, key)
     do_redis(
         {
             "hmset",
-            tbname .. ":" .. rediskey,
+            tbname .. ":" .. redis_key,
             row
         },
         uid
     )
-    if config.indexkey then
-        local linkey = make_rediskey(row, config.indexkey)
-        local indexvalue = 0
-        if config.indexvalue then
-            indexvalue = row[config.indexvalue]
+    if config.index_key then
+        local linkey = make_redis_key(row, config.index_key)
+        local index_value = 0
+        if config.index_value then
+            index_value = row[config.index_value]
         end
         do_redis(
             {
                 "zadd",
                 tbname .. ":index:" .. linkey,
-                indexvalue,
-                rediskey
+                index_value,
+                redis_key
             },
             uid
         )
@@ -494,7 +494,7 @@ function CMD.insert(tbname, row, immed, nosync)
         sql[#sql] = nil
         table.insert(sql, ")")
 
-        return skynet.call(service["dbsync"], "lua", "sync", table.concat(sql), immed)
+        return skynet.call(service["db_sync"], "lua", "sync", table.concat(sql), immed)
     end
     return true
 end
@@ -502,31 +502,31 @@ end
 -- redis中更新一行记录，并同步到mysql
 -- 表名，列名，不同步到数据库
 function CMD.update(tbname, row, nosync)
-    local config = dbtableconfig[tbname]
+    local config = db_table_config[tbname]
     local uid = row.uid
-    local key = config.rediskey
+    local key = config.redis_key
 
-    local rediskey = make_rediskey(row, key)
+    local redis_key = make_redis_key(row, key)
     do_redis(
         {
             "hmset",
-            tbname .. ":" .. rediskey,
+            tbname .. ":" .. redis_key,
             row
         },
         uid
     )
-    if config.indexkey then
-        local linkey = make_rediskey(row, config.indexkey)
-        local indexvalue = 0
-        if config.indexvalue then
-            indexvalue = row[config.indexvalue]
+    if config.index_key then
+        local linkey = make_redis_key(row, config.index_key)
+        local index_value = 0
+        if config.index_value then
+            index_value = row[config.index_value]
         end
         do_redis(
             {
                 "zadd",
                 tbname .. ":index:" .. linkey,
-                indexvalue,
-                rediskey
+                index_value,
+                redis_key
             },
             uid
         )
@@ -553,14 +553,14 @@ function CMD.update(tbname, row, nosync)
         table.insert(sql, row[pk])
         table.insert(sql, "'")
         
-        skynet.call(service["dbsync"], "lua", "sync", table.concat(sql))
+        skynet.call(service["db_sync"], "lua", "sync", table.concat(sql))
     end
 end
 
 local function module_init(name, mod)
     MODULE[name] = mod
     mod.init(CMD)
-    CMD.load_data_impl(dbtableconfig[name])
+    CMD.load_data_impl(db_table_config[name])
 end
 local system = {}
 
@@ -579,7 +579,7 @@ function system.open()
 end
 
 function system.close()
-    log.notice("close dbmgr...")
+    log.notice("close db_mgr...")
     for _, v in pairs(servername) do
         skynet.call(service[v], "lua", "close")
     end

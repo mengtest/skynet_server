@@ -1,4 +1,4 @@
-local createmonster = {
+local create_monster = {
     main = {
         {
             id = 100,
@@ -29,4 +29,4 @@ local createmonster = {
     }
 }
 
-return createmonster
+return create_monster

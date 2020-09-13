@@ -1,5 +1,5 @@
-local basechar = require "obj.basechar"
-local enumtype = require "enumtype"
+local base_char = require "obj.base_char"
+local enum_type = require "enum_type"
 
 local _npc = {}
 local s_method = {
@@ -8,17 +8,17 @@ local s_method = {
 
 local function init_method(npc)
     -- 获取npcid
-    function npc:getid()
+    function npc:get_id()
         return self.id
     end
 
-    basechar.expandmethod(npc)
+    base_char.expand_method(npc)
 end
 init_method(s_method.__index)
 
 -- 创建npc
 function _npc.create(id)
-    local npc = basechar.create(enumtype.CHAR_TYPE_NPC)
+    local npc = base_char.create(enum_type.CHAR_TYPE_NPC)
     -- npc 特有属性
     npc.id = 0
 

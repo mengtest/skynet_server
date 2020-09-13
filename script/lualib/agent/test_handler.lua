@@ -26,7 +26,7 @@ function REQUEST.ping()
     }
 end
 
-function REQUEST.quitgame()
+function REQUEST.quit_game()
     log.debug("query quit game")
     user.CMD.logout()
     return {

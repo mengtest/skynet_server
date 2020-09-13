@@ -1,6 +1,6 @@
 local service = require "service"
 local mysql = require "skynet.db.mysql"
-local config = require "serviceconfig.mysqlconf"
+local config = require "service_config.mysql_conf"
 local log = require "syslog"
 
 local CMD = {}
@@ -10,7 +10,7 @@ local ngroup
 local index = 1
 
 -- 获取db
-local function getconn(write)
+local function get_conn(write)
     local db
     if write then
         db = center
@@ -40,7 +40,7 @@ end
 
 -- 执行sql语句
 function CMD.execute(sql, write)
-    local db = getconn(write)
+    local db = get_conn(write)
     return db:query(sql)
 end
 

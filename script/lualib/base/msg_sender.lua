@@ -5,19 +5,19 @@ local socketdriver = require "skynet.socketdriver"
 local string = string
 local request
 
-local msgsender = {}
+local msg_sender = {}
 
 local host
 
-local function messagepackage(name, args)
+local function message_package(name, args)
     local str = request(name, args)
     return string.pack(">I2", #str + 4)..str..string.pack(">I4", 0)
 end
 
-function msgsender.boardcast(package, list, obj)
+function msg_sender.boardcast(package, list, obj)
     if list == nil then
         assert(obj)
-        list = obj:getsend2clientaoilist()
+        list = obj:get_send_to_client_aoi_list()
     end
     assert(type(list) == "table", "boardcast list is not a table")
     for _, v in pairs(list) do
@@ -26,24 +26,24 @@ function msgsender.boardcast(package, list, obj)
 end
 
 -- 发送请求
-function msgsender.sendrequest(name, args, user)
+function msg_sender.send_request(name, args, user)
     assert(name)
     assert(args)
-    socketdriver.send(user.fd, messagepackage(name, args))
+    socketdriver.send(user.fd, message_package(name, args))
 end
 
 -- 发送广播请求
-function msgsender.sendboardrequest(name, args, agentlist, user)
+function msg_sender.send_board_request(name, args, agent_list, user)
     assert(name)
     assert(args)
-    msgsender.boardcast(messagepackage(name, args), agentlist, user)
+    msg_sender.boardcast(message_package(name, args), agent_list, user)
 end
 
-function msgsender.gethost()
+function msg_sender.get_host()
     return host
 end
 
-function msgsender.init()
+function msg_sender.init()
     local protoloader = skynet.uniqueservice "protoloader"
     local slot = skynet.call(protoloader, "lua", "index", "clientproto")
     host = sprotoloader.load(slot):host "package"
@@ -51,4 +51,4 @@ function msgsender.init()
     request = host:attach(sprotoloader.load(slot))
 end
 
-return msgsender
+return msg_sender

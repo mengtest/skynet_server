@@ -1,20 +1,20 @@
 local skynet = require "skynet"
-local aoifun = require "obj.aoifunc"
-local enumtype = require "enumtype"
+local aoi_func = require "obj.aoi_func"
+local enum_type = require "enum_type"
 
-local _basechar = {}
+local _base_char = {}
 
-function _basechar.create(type)
+function _base_char.create(type)
     local obj = {
         -- 初始化函數
         init_func = {},
         -- 释放函数
         release_func = {},
         -- aoi对象
-        aoiobj = {
+        aoi_obj = {
             agent = skynet.self(),
-            tempid = 0,
-            type = enumtype.CHAR_TYPE_UNKNOW,
+            temp_id = 0,
+            type = enum_type.CHAR_TYPE_UNKNOW,
             movement = {
                 mode = "wm",
                 pos = {
@@ -25,38 +25,38 @@ function _basechar.create(type)
             }
         },
         -- 视野内的角色
-        aoilist = {}
+        aoi_list = {}
     }
-    assert(type and type > enumtype.CHAR_TYPE_UNKNOW and type < enumtype.CHAR_TYPE_MAX)
+    assert(type and type > enum_type.CHAR_TYPE_UNKNOW and type < enum_type.CHAR_TYPE_MAX)
 
-    obj.aoiobj.type = type
+    obj.aoi_obj.type = type
     return obj
 end
 
 -- 扩展方法表
-function _basechar.expandmethod(obj)
+function _base_char.expand_method(obj)
     -- 获取角色类型
-    function obj:gettype()
-        return self.aoiobj.type
+    function obj:get_type()
+        return self.aoi_obj.type
     end
 
     -- 是否玩家
-    function obj:isplayer()
-        return self.aoiobj.type == enumtype.CHAR_TYPE_PLAYER
+    function obj:is_player()
+        return self.aoi_obj.type == enum_type.CHAR_TYPE_PLAYER
     end
 
     -- 是否玩家
-    function obj:isnpc()
-        return self.aoiobj.type == enumtype.CHAR_TYPE_NPC
+    function obj:is_npc()
+        return self.aoi_obj.type == enum_type.CHAR_TYPE_NPC
     end
 
     -- 是否玩家
-    function obj:ismonster()
-        return self.aoiobj.type == enumtype.CHAR_TYPE_MONSTER
+    function obj:is_monster()
+        return self.aoi_obj.type == enum_type.CHAR_TYPE_MONSTER
     end
 
     -- 添加到初始化函数中
-    function obj:addinitfunc(f)
+    function obj:add_init_func(f)
         table.insert(self.init_func, f)
     end
 
@@ -68,7 +68,7 @@ function _basechar.expandmethod(obj)
     end
 
     -- 添加到输出化函数中
-    function obj:addreleasefunc(f)
+    function obj:add_release_func(f)
         table.insert(self.release_func, f)
     end
 
@@ -80,7 +80,7 @@ function _basechar.expandmethod(obj)
     end
 
     -- 添加aoifunc
-    aoifun.expandmethod(obj)
+    aoi_func.expand_method(obj)
 end
 
-return _basechar
+return _base_char

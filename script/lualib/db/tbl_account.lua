@@ -1,24 +1,24 @@
 local log = require "syslog"
 local table = table
 
-local dbmgrcmd = {}
+local db_mgr_cmd = {}
 local tbl_account = {}
 
 function tbl_account.init(cmd)
-    dbmgrcmd = cmd
+    db_mgr_cmd = cmd
 end
 
 -- logind请求认证
 function tbl_account.auth(uid, password)
     log.debug("auth:%s\t%s", uid, password)
-    local result = dbmgrcmd.execute_single("tbl_account", uid)
+    local result = db_mgr_cmd.execute_single("tbl_account", uid)
     if not table.empty(result) then
         log.debug("find tbl_account:%s", uid)
         if result["uid"] == uid then
             local row = {}
             row.uid = uid
-            row.logintime = os.date("%Y-%m-%d %H:%M:%S")
-            dbmgrcmd.update("tbl_account", row)
+            row.login_time = os.date("%Y-%m-%d %H:%M:%S")
+            db_mgr_cmd.update("tbl_account", row)
             log.debug("tbl_account:%s update login time", uid)
         else
             log.debug("find tbl_account:%s in DB,but result['uid'] = %s", uid, result["uid"])
@@ -28,9 +28,9 @@ function tbl_account.auth(uid, password)
         -- 不存在于redis中的时候，添加记录
         local row = {}
         row.uid = uid
-        row.createtime = os.date("%Y-%m-%d %H:%M:%S")
-        row.logintime = row.createtime
-        dbmgrcmd.insert("tbl_account", row)
+        row.create_time = os.date("%Y-%m-%d %H:%M:%S")
+        row.login_time = row.create_time
+        db_mgr_cmd.insert("tbl_account", row)
     end
     return true
 end

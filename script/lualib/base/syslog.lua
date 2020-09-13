@@ -1,6 +1,6 @@
 local skynet = require "skynet"
 local profile = require "skynet.profile"
-local config = require "serviceconfig.baseconfig"
+local config = require "service_config.base_config"
 
 local syslog = {
     prefix = {

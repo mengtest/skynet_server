@@ -4,8 +4,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 账号表
 CREATE TABLE IF NOT EXISTS `tbl_account` (
   `uid` varchar(64) NOT NULL COMMENT '账号',
-  `createtime` DATETIME NOT NULL COMMENT '创建时间',
-  `logintime` DATETIME NOT NULL COMMENT '登陆时间',
+  `create_time` DATETIME NOT NULL COMMENT '创建时间',
+  `login_time` DATETIME NOT NULL COMMENT '登陆时间',
   PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS `tbl_character` (
   `sex` tinyint(1) unsigned NOT NULL COMMENT '性别',
   `job` tinyint(4) unsigned NOT NULL COMMENT '职业',
   `level` int(8) unsigned NOT NULL COMMENT '等级',
-  `createtime` DATETIME NOT NULL COMMENT '创建时间',
-  `logintime` DATETIME NOT NULL COMMENT '登陆时间',
-  `mapid` int(32) unsigned NOT NULL COMMENT '所在地图',
+  `create_time` DATETIME NOT NULL COMMENT '创建时间',
+  `login_time` DATETIME NOT NULL COMMENT '登陆时间',
+  `map_id` int(32) unsigned NOT NULL COMMENT '所在地图',
   `x` float(32,0) NOT NULL COMMENT '坐标x',
   `y` float(32,0) NOT NULL COMMENT '坐标y',
   `z` float(32,0) NOT NULL COMMENT '坐标z',

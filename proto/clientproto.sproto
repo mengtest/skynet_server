@@ -10,7 +10,7 @@
 	job 2 : integer
 	sex 3 : integer
 	name 4 : string
-	createtime 5 : string
+	create_time 5 : string
 }
 
 .character_create{
@@ -71,14 +71,14 @@ login 5 {
 	}
 }
 
-getcharacterlist 6 {
+get_character_list 6 {
 	response {
 		#(uuid) is optional, means character_overview.uuid is main index.
 		character 0 : *character_overview(uuid)
 	}
 }
 
-charactercreate 7 {
+character_create 7 {
 	request {
 		name 0 : string
 		job 1 : integer
@@ -89,17 +89,17 @@ charactercreate 7 {
 	}
 }
 
-characterpick 8{
+character_pick 8{
 	request {
 		uuid 0 : integer
 	}
 	response {
 		ok 0 : boolean
-        tempid 1 : integer
+        temp_id 1 : integer
 	}
 }
 
-mapready 9{
+map_ready 9{
 	response {
 		ok 0 : boolean
 	}
@@ -114,25 +114,25 @@ moveto 10{
 	}
 }
 
-quitgame 11{
+quit_game 11{
 	response {
 		ok 0 : boolean
 	}
 }
 
-changemap 12{
+change_map 12{
 	request {
-		mapid 0 : integer
+		map_id 0 : integer
 	}
 	response {
 		ok 0 : boolean
-        tempid 1 : integer
+        temp_id 1 : integer
 	}
 }
 
-enterinstance 13{
+enter_instance 13{
 	request {
-		instanceid 0 : integer
+		instance_id 0 : integer
 	}
 	response {
 		ok 0 : boolean

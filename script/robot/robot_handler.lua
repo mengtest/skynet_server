@@ -61,7 +61,7 @@ end
 
 local function login(self)
     -- 连接到gameserver
-    self.fd = assert(socket.open(self.gateip, self.gateport))
+    self.fd = assert(socket.open(self.gate_ip, self.gate_port))
     --if true then return end
     local handshake =
         string.format(
@@ -90,34 +90,34 @@ function RESPONSE:login(args)
     )
 end
 
-local function getcharacterlist(self)
-    log.error("send getcharacterlist")
-    self:send_request("getcharacterlist")
+local function get_character_list(self)
+    log.error("send get_character_list")
+    self:send_request("get_character_list")
 end
 
-local function charactercreate(self)
-    log.error("send charactercreate")
+local function character_create(self)
+    log.error("send character_create")
     local character_create = {
         name = self.name,
         job = 1,
         sex = 1
     }
-    self:send_request("charactercreate", character_create)
+    self:send_request("character_create", character_create)
 end
 
-local function characterpick(self, uuid)
-    log.error("send characterpick :" .. uuid)
+local function character_pick(self, uuid)
+    log.error("send character_pick :" .. uuid)
     self:send_request(
-        "characterpick",
+        "character_pick",
         {
             uuid = uuid
         }
     )
 end
 
-local function mapready(self)
-    log.error("send mapready")
-    self:send_request("mapready")
+local function map_ready(self)
+    log.error("send map_ready")
+    self:send_request("map_ready")
 end
 
 local function moveto(self, pos)
@@ -130,18 +130,18 @@ local function moveto(self, pos)
     )
 end
 
-local function changemap(self)
-    log.error("send changemap")
+local function change_map(self)
+    log.error("send change_map")
     self:send_request(
-        "changemap",
+        "change_map",
         {
-            mapid = self.mapid
+            map_id = self.map_id
         }
     )
 end
 
-local function quitgame(self)
-    self:send_request("quitgame")
+local function quit_game(self)
+    self:send_request("quit_game")
 end
 
 function RESPONSE:ping(args)
@@ -149,7 +149,7 @@ function RESPONSE:ping(args)
 
     self.index = self.index + 1
     if self.index > 0 then
-        getcharacterlist(self)
+        get_character_list(self)
         return
     end
     -- 断开连接
@@ -160,43 +160,43 @@ function RESPONSE:ping(args)
     login(self)
 end
 
-function RESPONSE:getcharacterlist(args)
-    log.error("getcharacterlist size:" .. table.size(args.character))
+function RESPONSE:get_character_list(args)
+    log.error("get_character_list size:" .. table.size(args.character))
     if (table.size(args.character) < 1) then
-        charactercreate(self)
+        character_create(self)
     else
         local uuid = 0
         local bpick = false
         for k, v in pairs(args.character) do
             if v.name == self.name then
                 uuid = k
-                characterpick(self, uuid)
+                character_pick(self, uuid)
                 bpick = true
                 break
             end
         end
         if not bpick then
             for k, v in pairs(args.character) do
-                log.error("getcharacterlist size > 1:"..self.name.." "..v.name)
+                log.error("get_character_list size > 1:"..self.name.." "..v.name)
             end
             
-            --charactercreate(self)
+            --character_create(self)
         end
     end
 end
 
-function RESPONSE:charactercreate(args)
-    log.error("charactercreate:")
-    getcharacterlist(self)
+function RESPONSE:character_create(args)
+    log.error("character_create:")
+    get_character_list(self)
 end
 
-function RESPONSE:characterpick(args)
-    log.debug("characterpick ret tempid: " .. args.tempid)
-    mapready(self)
+function RESPONSE:character_pick(args)
+    log.debug("character_pick ret temp_id: " .. args.temp_id)
+    map_ready(self)
 end
 
-function RESPONSE:mapready(args)
-    log.error("mapready:")
+function RESPONSE:map_ready(args)
+    log.error("map_ready:")
     local pos = {
         x = 1,
         y = 2,
@@ -208,7 +208,7 @@ end
 function RESPONSE:moveto(args)
     --log.error("moveto:")
     if not self.bchangemap then
-        changemap(self)
+        change_map(self)
     else
         local pos = args.pos
         local n = random(10000)
@@ -240,14 +240,14 @@ function RESPONSE:moveto(args)
         moveto(self, pos)
         skynet.sleep(10)
     end
-    -- quitgame(self)
+    -- quit_game(self)
 end
 
-function RESPONSE:changemap(args)
+function RESPONSE:change_map(args)
     self.bchangemap = true
     if args.ok then
-        log.debug("changemap succ:" .. args.tempid)
-        mapready(self)
+        log.debug("change_map succ:" .. args.temp_id)
+        map_ready(self)
     else
         local pos = {
             x = 1,
@@ -258,8 +258,8 @@ function RESPONSE:changemap(args)
     end
 end
 
-function RESPONSE:quitgame(args)
-    log.error("quitgame:")
+function RESPONSE:quit_game(args)
+    log.error("quit_game:")
     log.error(args.ok)
 end
 
@@ -276,8 +276,8 @@ function REQUEST:subid(args)
     self.subid = crypt.base64decode(string.sub(result, 5))
 
     --log.error("login ok, subid=" .. self.subid)
-    self.gateip = args.gateip
-    self.gateport = args.gateport
+    self.gate_ip = args.gate_ip
+    self.gate_port = args.gate_port
     login(self)
 end
 
@@ -285,24 +285,24 @@ function REQUEST:heartbeat()
     log.error("===heartbeat===")
 end
 
-function REQUEST:characterupdate(args)
-    -- log.error("characterupdate:")
+function REQUEST:character_update(args)
+    -- log.error("character_update:")
 end
 
-function REQUEST:characterleave(args)
-    -- log.error("characterleave:")
+function REQUEST:character_leave(args)
+    -- log.error("character_leave:")
 end
 
-function REQUEST:delaytest(args)
-    log.error("delaytest")
+function REQUEST:delay_test(args)
+    log.error("delay_test")
     -- log.error(args)
     return {
         time = args.time
     }
 end
 
-function REQUEST:delayresult(args)
-    log.error("delayresult:" .. args.time)
+function REQUEST:delay_result(args)
+    log.error("delay_result:" .. args.time)
 end
 
 function REQUEST:moveto(args)

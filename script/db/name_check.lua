@@ -6,7 +6,7 @@ local CMD = {}
 local usename = {}
 
 -- 检查角色名是否重复
-function CMD.playernamecheck(name)
+function CMD.name_check(name)
     if usename[name] == nil then
         usename[name] = true
         return true
@@ -16,11 +16,11 @@ function CMD.playernamecheck(name)
 end
 
 function CMD.close()
-    log.notice("close namecheck...")
+    log.notice("close name_check...")
 end
 
 local function load_name()
-    local mysqlpool = skynet.uniqueservice("mysqlpool")
+    local mysql_pool = skynet.uniqueservice("mysql_pool")
     local offset = 0
     local sql
     while true do
@@ -30,7 +30,7 @@ local function load_name()
             offset
         )
 
-        local rs = skynet.call(mysqlpool, "lua", "execute", sql)
+        local rs = skynet.call(mysql_pool, "lua", "execute", sql)
         if #rs <= 0 then
             break
         end

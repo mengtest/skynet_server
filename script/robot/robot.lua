@@ -84,7 +84,7 @@ local function init_method(robot)
     end
 
     function robot:dispatch_message()
-        local ok, content = recv_response(self.readpackage())
+        local ok, content = recv_response(self.read_package())
         assert(ok)
 		local session = string.unpack(">I4", content, -4)
 		content = content:sub(1,-5)
@@ -114,7 +114,7 @@ local function init_method(robot)
     end
 
     function robot:start()
-        self.fd = assert(socket.open(self.loginserverip, self.loginserverport))
+        self.fd = assert(socket.open(self.loginserver_ip, self.loginserver_port))
 
         self.clientkey = crypt.randomkey()
         self:send_request(
@@ -124,49 +124,49 @@ local function init_method(robot)
             }
         )
 
-        self.dispatchmessage_thread = util.fork(self.dispatch_message, self)
+        self.dispatch_message_thread = util.fork(self.dispatch_message, self)
     end
     function robot:close()
-        self.dispatchmessage_thread()
+        self.dispatch_message_thread()
         socket.close(self.fd)
     end
 end
 init_method(s_method.__index)
 
-function _robot.create(mapid, server, ip, port, robotindex)
+function _robot.create(map_id, server, ip, port, robot_index)
     local obj = {
         REQUEST = {},
         RESPONSE = {},
         last = "",
-        readpackage = nil,
-        loginserverip = ip,
-        loginserverport = port,
-        gateip = nil,
-        gateport = nil,
+        read_package = nil,
+        loginserver_ip = ip,
+        loginserver_port = port,
+        gate_ip = nil,
+        gate_port = nil,
         fd = nil,
-        account = "Robot_" .. robotindex,
-        name = "Robot_" .. robotindex,
+        account = "Robot_" .. robot_index,
+        name = "Robot_" .. robot_index,
         session = {},
         session_id = 0,
         token = {
             server = server,
-            user = "Robot_" .. robotindex,
+            user = "Robot_" .. robot_index,
             pass = "password"
         },
         challenge = nil,
         clientkey = nil,
         serverkey = nil,
         secret = nil,
-        dispatchmessage_thread = nil,
+        dispatch_message_thread = nil,
         host = nil,
         request = nil,
         index = 1,
-        mapid = mapid + 1,
+        map_id = map_id + 1,
         bchangemap = false,
     }
     obj = setmetatable(obj, s_method)
 
-    obj.readpackage = obj:unpack_f(unpack_package)
+    obj.read_package = obj:unpack_f(unpack_package)
 
     robot_handler:register(obj)
 

@@ -22,17 +22,17 @@ _handler:release(
 
 function REQUEST.moveto(args)
     local newpos = args.pos
-    local oldpos = user.character:getpos()
+    local oldpos = user.character:get_pos()
     for k, v in pairs(oldpos) do
         if not newpos[k] then
             newpos[k] = v
         end
     end
-    user.character:setpos(newpos)
-    local ok, pos = skynet.call(user.character:getmapaddress(), "lua", "moveto", user.character:getaoiobj())
+    user.character:set_pos(newpos)
+    local ok, pos = skynet.call(user.character:get_map_address(), "lua", "moveto", user.character:get_aoi_obj())
     if not ok then
         pos = oldpos
-        user.character:setpos(pos)
+        user.character:set_pos(pos)
     end
     return {
         pos = pos

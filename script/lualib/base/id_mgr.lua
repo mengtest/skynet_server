@@ -1,84 +1,84 @@
 --[[===================================
-local _idmgr = {
+local _id_mgr = {
   id = 1,
   max = 1,
   pool = {},
 }
 
 --设置最大id
-function _idmgr:setmaxid(id)
+function _id_mgr:set_max_id(id)
   self.max = id
 end
 
 --分配一个id
-function _idmgr:createid()
-  local tempid = self.id
+function _id_mgr:create_id()
+  local temp_id = self.id
   self.id = self.id + 1
-  if self.pool[tempid] then
+  if self.pool[temp_id] then
     for i = 1,self.max do
-      tempid = nil
+      temp_id = nil
       if self.pool[i] == nil then
-        tempid = i
+        temp_id = i
         break
       end
     end
-    assert(tempid)
+    assert(temp_id)
   end
-  self.id = tempid + 1
+  self.id = temp_id + 1
   if self.id >= self.max then
     self.id = 1
   end
-  self.pool[tempid] = true
-  return tempid
+  self.pool[temp_id] = true
+  return temp_id
 end
 
 --释放一个id
-function _idmgr:releaseid(id)
+function _id_mgr:release_id(id)
   self.pool[id] = nil
 end
 
-return _idmgr
+return _id_mgr
 ]] --[[===============================
-local _idmgr = {}
+local _id_mgr = {}
 
 local max = 1
 local id = 1
 local pool = {}
 
 --设置最大id
-function _idmgr:setmaxid(id)
+function _id_mgr:set_max_id(id)
   max = id
 end
 
 --分配一个id
-function _idmgr:createid()
-  local tempid = id
+function _id_mgr:create_id()
+  local temp_id = id
   id = id + 1
   if pool[id] then
     for i = 1,max do
-      tempid = nil
+      temp_id = nil
       if pool[i] == nil then
-        tempid = i
+        temp_id = i
         break
       end
     end
-    assert(tempid)
+    assert(temp_id)
   end
-  id = tempid + 1
+  id = temp_id + 1
   if id >= max then
     id = 1
   end
-  return tempid
+  return temp_id
 end
 
 --释放一个id
-function _idmgr:releaseid(id)
+function _id_mgr:release_id(id)
   pool[id] = nil
 end
 
-return _idmgr
+return _id_mgr
 
-local _idmgr = {
+local _id_mgr = {
     id = 1,
     max = 1,
     pool = {}
@@ -90,78 +90,78 @@ local s_method = {
 
 local function init_method(func)
     -- 设置最大id
-    function func:setmaxid(id)
+    function func:set_max_id(id)
         self.max = id
     end
 
     -- 分配一个id
-    function func:createid()
-        local tempid = self.id
+    function func:create_id()
+        local temp_id = self.id
         self.id = self.id + 1
-        if self.pool[tempid] then
+        if self.pool[temp_id] then
             for i = 1, self.max do
-                tempid = nil
+                temp_id = nil
                 if self.pool[i] == nil then
-                    tempid = i
+                    temp_id = i
                     break
                 end
             end
-            assert(tempid)
+            assert(temp_id)
         end
-        self.id = tempid + 1
+        self.id = temp_id + 1
         if self.id >= self.max then
             self.id = 1
         end
-        self.pool[tempid] = true
-        return tempid
+        self.pool[temp_id] = true
+        return temp_id
     end
 
     -- 释放一个id
-    function func:releaseid(id)
+    function func:release_id(id)
         self.pool[id] = nil
     end
 end
 
 init_method(s_method.__index)
 
-return setmetatable(_idmgr, s_method)
+return setmetatable(_id_mgr, s_method)
 
 ]] -- ================================
-local idmgr = {}
+local id_mgr = {}
 
 local id = 1
 local max = 1
 local pool = {}
 -- 设置最大id
-function idmgr.setmaxid(_id)
+function id_mgr.set_max_id(_id)
     max = _id
 end
 
 -- 分配一个id
-function idmgr.createid()
-    local tempid = id
+function id_mgr.create_id()
+    local temp_id = id
     id = id + 1
-    if pool[tempid] then
+    if pool[temp_id] then
         for i = 1, max do
-            tempid = nil
+            temp_id = nil
             if pool[i] == nil then
-                tempid = i
+                temp_id = i
                 break
             end
         end
-        assert(tempid)
+        assert(temp_id)
     end
-    id = tempid + 1
+    id = temp_id + 1
     if id >= max then
         id = 1
     end
-    pool[tempid] = true
-    return tempid
+    pool[temp_id] = true
+    return temp_id
 end
 
 -- 释放一个id
-function idmgr.releaseid(_id)
+function id_mgr.release_id(_id)
     pool[_id] = nil
 end
 
-return idmgr
+return id_mgr
