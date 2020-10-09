@@ -1,8 +1,8 @@
 local proto_patch
 
 proto_patch = {
-    "clientproto",
-    "serverproto"
+    "client",
+    "server"
 }
 
 return proto_patch

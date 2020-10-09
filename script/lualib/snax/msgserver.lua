@@ -157,7 +157,7 @@ function server.start(conf)
 
     function handler.open(_, gateconf)
         local protoloader = skynet.uniqueservice "protoloader"
-        local slot = skynet.call(protoloader, "lua", "index", "clientproto")
+        local slot = skynet.call(protoloader, "lua", "index", "client")
         host = sprotoloader.load(slot):host "package"
         return conf.register_handler(gateconf)
     end

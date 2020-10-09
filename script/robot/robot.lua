@@ -171,9 +171,9 @@ function _robot.create(map_id, server, ip, port, robot_index)
     robot_handler:register(obj)
 
     local protoloader = skynet.uniqueservice "protoloader"
-    local slot = skynet.call(protoloader, "lua", "index", "serverproto")
+    local slot = skynet.call(protoloader, "lua", "index", "server")
     obj.host = sprotoloader.load(slot):host "package"
-    slot = skynet.call(protoloader, "lua", "index", "clientproto")
+    slot = skynet.call(protoloader, "lua", "index", "client")
     obj.request = obj.host:attach(sprotoloader.load(slot))
 
     return obj
