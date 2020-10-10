@@ -1,6 +1,6 @@
 __nowaiting = true
 
-login   = "login:5000"
-db      = "db:5001"
-game0   = "game0:5002"
-game1   = "game1:5003"
+login   = "127.0.0.1:5000"
+db      = "127.0.0.1:5001"
+game0   = "127.0.0.1:5002"
+game1   = "127.0.0.1:5003"

@@ -12,7 +12,6 @@
 /.vscode
 *.pid
 
-.git
 *.md
 LICENSE
 Dockerfile

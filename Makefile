@@ -6,8 +6,7 @@ SKYNET_SRC ?= $(SKYNET_ROOT)/skynet-src
 LUA_INC ?= $(SKYNET_ROOT)/3rd/lua
 SERVICE_BIN ?=bin
 
-SHARED += -fPIC --shared
-CFLAGS += -g -O2 -Wall -I$(LUA_INC) -I$(SKYNET_SRC)
+CFLAGS = -g -O2 -Wall -I$(LUA_INC) -I$(SKYNET_SRC)
 
 #lua
 LUACLIB_PATH ?= $(SERVICE_BIN)/luaclib
