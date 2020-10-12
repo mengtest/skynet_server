@@ -20,7 +20,7 @@ do
 			DAEMON=true
 			;;
 		k)
-			kill `cat $ROOT/pids/$name.pid`
+			kill `cat $ROOT/bin/pids/$name.pid`
 			exit 0;
 			;;
 	esac

@@ -40,6 +40,7 @@ createdir:
 	@mkdir -p $(LUACLIB_PATH)
 	@mkdir -p $(CSERVICE_PATH)
 	@mkdir -p $(SERVICE_BIN)/lua-cjson
+	@mkdir -p $(SERVICE_BIN)/pids
 
 copyfiles:
 	@cp -rf $(SKYNET_ROOT)/skynet $(SERVICE_BIN)
