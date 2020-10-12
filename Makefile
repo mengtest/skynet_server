@@ -1,5 +1,4 @@
 THIRD_LIB_ROOT ?= 3rd
-LUA_CJSON_ROOT ?= $(THIRD_LIB_ROOT)/lua-cjson
 SKYNET_ROOT ?= $(THIRD_LIB_ROOT)/skynet
 include $(SKYNET_ROOT)/platform.mk
 SKYNET_SRC ?= $(SKYNET_ROOT)/skynet-src
@@ -14,7 +13,6 @@ LUACLIB_SRC_PATH ?= src/lualib-src
 
 #获取$(LUACLIB_SRC_PATH)目录下所有文件名
 LUA_CLIB_NAME = $(patsubst lua-%.c, %, $(notdir $(wildcard $(LUACLIB_SRC_PATH)/*.c)))
-#获取$(LUACLIB_SRC_PATH)目录下所有文件名
 LUACLIB_OBJ = $(foreach v, $(LUA_CLIB_NAME), $(LUACLIB_PATH)/$(v).so)
 
 #service
@@ -27,26 +25,21 @@ CSERVICE_OBJ = $(foreach v, $(CSERVICE_NAME), $(CSERVICE_PATH)/$(v).so)
 VPATH += $(LUACLIB_SRC_PATH)
 VPATH += $(CSERVICE_CSRC_PATH)
 
-linux macosx freebsd : make3rd createdir  copyfiles lib
+linux macosx freebsd : skynet createdir lib copyfiles
 
-make3rd :
+skynet :
 	@$(MAKE) $(PLAT) -C $(SKYNET_ROOT) --no-print-directory
-	#lua-cjson需要指定lua的目录，这边用skynet自带的lua先生成一下
-	gcc -c -O3 -Wall -pedantic -DNDEBUG  -I$(LUA_INC) -fpic -o $(LUA_CJSON_ROOT)/lua_cjson.o $(LUA_CJSON_ROOT)/lua_cjson.c
-	@$(MAKE) -C $(LUA_CJSON_ROOT) --no-print-directory
 
 createdir:
 	@mkdir -p $(SERVICE_BIN)
 	@mkdir -p $(LUACLIB_PATH)
 	@mkdir -p $(CSERVICE_PATH)
-	@mkdir -p $(SERVICE_BIN)/lua-cjson
 	@mkdir -p $(SERVICE_BIN)/pids
 
-lib:$(LUACLIB_OBJ) $(CSERVICE_OBJ) ${LUACLIB_PATH}/lfs.so
+lib:$(LUACLIB_OBJ) $(CSERVICE_OBJ) ${LUACLIB_PATH}/lfs.so ${LUACLIB_PATH}/cjson.so
 
 copyfiles:
 	@cp -rf $(SKYNET_ROOT)/skynet $(SERVICE_BIN)
-	@cp -rf $(LUA_CJSON_ROOT)/cjson.so $(SERVICE_BIN)/lua-cjson
 
 $(LUACLIB_OBJ) : $(LUACLIB_PATH)/%.so : lua-%.c 
 	@echo "	$@"
@@ -60,14 +53,27 @@ $(CSERVICE_PATH)/%.so : service_%.c
 	@echo "	$@"
 	@$(CC) $(CFLAGS) $(SHARED) $^ -o $@
 
+# cjson
+LUA_CJSON_ROOT ?= $(THIRD_LIB_ROOT)/lua-cjson
+CJSON_SOURCE = $(LUA_CJSON_ROOT)/lua_cjson.c \
+				$(LUA_CJSON_ROOT)/strbuf.c \
+				$(LUA_CJSON_ROOT)/fpconv.c
+
+${LUACLIB_PATH}/cjson.so:${CJSON_SOURCE}
+	${CC} $(CFLAGS) $(SHARED) -I$(LUA_CJSON_ROOT) $^ -o $@ $(LDFLAGS)
+
+$(LUA_CJSON_ROOT)/lua_cjson.c:
+	git submodule update --init $(LUA_CJSON_ROOT)
+
 # lfs
-LFS_SOURCE=3rd/lfs/src/lfs.c
+LFS_ROOT ?= $(THIRD_LIB_ROOT)/lfs
+LFS_SOURCE=$(LFS_ROOT)/src/lfs.c
 
 ${LFS_SOURCE}:
-	git submodule update --init 3rd/lfs
+	git submodule update --init $(LFS_ROOT)
 
 ${LUACLIB_PATH}/lfs.so: ${LFS_SOURCE}
-	gcc $(CFLAGS) $(SHARED) -I3rd/lfs/src/ $^ -o $@ $(LDFLAGS)
+	${CC} $(CFLAGS) $(SHARED) -I$(LFS_ROOT)/src/ $^ -o $@ $(LDFLAGS)
 
 clean :
 	$(RM) -rf $(LUACLIB_OBJ) $(CSERVICE_OBJ) $(SERVICE_BIN)
@@ -76,4 +82,4 @@ cleanall: clean
 	@$(MAKE) -C $(LUA_CJSON_ROOT) clean --no-print-directory
 	@$(MAKE) -C $(SKYNET_ROOT) cleanall --no-print-directory
 
-.PHONY : linux macosx freebsd make3rd createdir clean cleanall
+.PHONY : linux macosx freebsd skynet createdir lib copyfiles clean cleanall

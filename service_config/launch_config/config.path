@@ -15,9 +15,6 @@ lua_path = lua_path..skynet_path.."lualib/?.lua;"..skynet_path.."lualib/skynet/?
 lua_cpath = lua_cpath..skynet_path.."luaclib/?.so;"
 cpath = cpath..skynet_path.."cservice/?.so;"
 
--- 3rd path
-lua_cpath = lua_cpath..so_root.."lua-cjson/?.so;"
-
 logservice = "syslog"
 lualoader = skynet_path.."lualib/loader.lua"
 preload = script_root.."lualib/global/preload.lua"
