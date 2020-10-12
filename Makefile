@@ -27,7 +27,7 @@ CSERVICE_OBJ = $(foreach v, $(CSERVICE_NAME), $(CSERVICE_PATH)/$(v).so)
 VPATH += $(LUACLIB_SRC_PATH)
 VPATH += $(CSERVICE_CSRC_PATH)
 
-linux macosx freebsd : make3rd createdir $(LUACLIB_OBJ) $(CSERVICE_OBJ) copyfiles
+linux macosx freebsd : make3rd createdir  copyfiles lib
 
 make3rd :
 	@$(MAKE) $(PLAT) -C $(SKYNET_ROOT) --no-print-directory
@@ -41,6 +41,8 @@ createdir:
 	@mkdir -p $(CSERVICE_PATH)
 	@mkdir -p $(SERVICE_BIN)/lua-cjson
 	@mkdir -p $(SERVICE_BIN)/pids
+
+lib:$(LUACLIB_OBJ) $(CSERVICE_OBJ) ${LUACLIB_PATH}/lfs.so
 
 copyfiles:
 	@cp -rf $(SKYNET_ROOT)/skynet $(SERVICE_BIN)
@@ -57,6 +59,15 @@ $(CSERVICE_PATH)/caoi.so : service_aoi.c aoi.c
 $(CSERVICE_PATH)/%.so : service_%.c
 	@echo "	$@"
 	@$(CC) $(CFLAGS) $(SHARED) $^ -o $@
+
+# lfs
+LFS_SOURCE=3rd/lfs/src/lfs.c
+
+${LFS_SOURCE}:
+	git submodule update --init 3rd/lfs
+
+${LUACLIB_PATH}/lfs.so: ${LFS_SOURCE}
+	gcc $(CFLAGS) $(SHARED) -I3rd/lfs/src/ $^ -o $@ $(LDFLAGS)
 
 clean :
 	$(RM) -rf $(LUACLIB_OBJ) $(CSERVICE_OBJ) $(SERVICE_BIN)

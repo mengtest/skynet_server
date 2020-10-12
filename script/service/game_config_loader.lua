@@ -1,16 +1,13 @@
 local service = require "service"
 local sharetable = require "skynet.sharetable"
-local files = require "game_config.files"
+local file = require "file"
 
 local CMD = {}
 
-function CMD.load_file(filename)
-    sharetable.loadstring(filename, io.open("game_config/"..filename..".lua","r"):read("a"))
-end
-
 local function init()
+    local files = file.get_files_name("game_config")
     for k,v in pairs(files) do
-        CMD.load_file(v)
+        sharetable.loadstring(v, io.open("game_config/"..v..".lua", "r"):read("a"))
     end
 end
 
