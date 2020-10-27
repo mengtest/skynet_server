@@ -3,11 +3,11 @@ local skynet = require "skynet"
 local sprotoloader = require "sprotoloader"
 local socketdriver = require "skynet.socketdriver"
 local string = string
-local request
 
 local msg_sender = {}
 
 local host
+local request
 
 local function message_package(name, args)
     local str = request(name, args)
@@ -44,11 +44,8 @@ function msg_sender.get_host()
 end
 
 function msg_sender.init()
-    local protoloader = skynet.uniqueservice "protoloader"
-    local slot = skynet.call(protoloader, "lua", "index", "client")
-    host = sprotoloader.load(slot):host "package"
-    slot = skynet.call(protoloader, "lua", "index", "server")
-    request = host:attach(sprotoloader.load(slot))
+    host = sprotoloader.load(1):host "package"
+    request = host:attach(sprotoloader.load(2))
 end
 
 return msg_sender

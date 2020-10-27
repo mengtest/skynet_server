@@ -1,10 +1,11 @@
+local ip_config = require "service_config.ip_config"
+local mysql_ip_config = ip_config.mysql
+
 local conf
 
-local host = "mysql"
-local port = 3306
 local database = "skynet"
 local user = "root"
-local password = "root"
+local password = "123456"
 local max_packet_size = 1024 * 1024
 
 local function on_connect(db)
@@ -12,8 +13,8 @@ local function on_connect(db)
 end
 
 local center = {
-    host = host,
-    port = port,
+    host = mysql_ip_config.center.host,
+    port = mysql_ip_config.center.port,
     database = database,
     user = user,
     password = password,
@@ -21,14 +22,13 @@ local center = {
     on_connect = on_connect
 }
 
-local ngroup = 0
 local group = {}
-for i = 1, ngroup do
+for i = 1, #mysql_ip_config.group do
     table.insert(
         group,
         {
-            host = host,
-            port = port + i,
+            host = mysql_ip_config.group[i].host,
+            port = mysql_ip_config.group[i].port,
             database = database,
             user = user,
             password = password,

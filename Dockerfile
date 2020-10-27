@@ -8,7 +8,13 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     make \ 
     autoconf \
     g++ \
-    readline-dev
+    readline-dev \
+    tzdata
+
+sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories 
+apk update && apk add --no-cache --virtual .build-deps git make autoconf g++ readline-dev tzdata
+
+ENV TZ Asia/Shanghai
 
 #编译
 FROM alpine-builder as server-built
@@ -33,6 +39,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     && apk add --no-cache \
     libgcc \
     tzdata 
+
+ENV TZ Asia/Shanghai
 
 #最终镜像
 FROM server-run

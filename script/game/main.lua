@@ -1,6 +1,5 @@
 local skynet = require "skynet"
 local config = require "service_config.game_config"
-local proto_patch = require "service_config.proto_patch"
 local log = require "syslog"
 local cluster = require "skynet.cluster"
 
@@ -16,8 +15,7 @@ skynet.start(
         skynet.uniqueservice("game_config_loader")
 
         -- 加载解析proto文件
-        local proto = skynet.uniqueservice "protoloader"
-        skynet.call(proto, "lua", "load", proto_patch)
+        skynet.uniqueservice "protoloader"
 
         -- 启动网关
         local gated = skynet.uniqueservice("gated")

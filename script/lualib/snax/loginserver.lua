@@ -69,11 +69,8 @@ end
 
 -- 加载proto
 local function load_proto()
-    local protoloader = skynet.uniqueservice "protoloader"
-    local slot = skynet.call(protoloader, "lua", "index", "client")
-    host = sprotoloader.load(slot):host "package"
-    slot = skynet.call(protoloader, "lua", "index", "server")
-    request = host:attach(sprotoloader.load(slot))
+    host = sprotoloader.load(1):host "package"
+    request = host:attach(sprotoloader.load(2))
 end
 
 local function launch_slave(auth_handler)

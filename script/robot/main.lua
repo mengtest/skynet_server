@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local proto_patch = require "service_config.proto_patch"
 local log = require "syslog"
 
 skynet.start(
@@ -7,8 +6,7 @@ skynet.start(
         log.debug("Robot Server start")
 
         -- 加载解析proto文件
-        local proto = skynet.uniqueservice "protoloader"
-        skynet.call(proto, "lua", "load", proto_patch)
+        skynet.uniqueservice "protoloader"
 
         local total_mgr = 2
         local robot_count = 2
