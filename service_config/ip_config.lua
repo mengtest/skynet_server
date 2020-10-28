@@ -1,37 +1,55 @@
 local ip_config = {}
 
+-- 基础debug监听端口
+local base_debug_port = 9000
+
 ip_config.mysql = {
     center = {
-        host = "192.168.130.63",
+        host = "192.168.100.233",
         port = 3306
     },
     group = {
-        {
-            host = "192.168.130.63",
-            port = 3306
-        },
-        {
-            host = "192.168.130.63",
-            port = 3306
-        },
+
     }
 }
 
 
 ip_config.redis = {
     center = {
-        host = "192.168.130.64",
+        host = "192.168.100.233",
         port = 6379,
     },
     group = {
-        {
-            host = "192.168.130.64",
-            port = 6379,
-        },
-        {
-            host = "192.168.130.64",
-            port = 6379,
-        },
+
+    }
+}
+
+ip_config.db = {
+    debug_address = "0.0.0.0",
+    debug_port = 9000,
+}
+
+ip_config.login = {
+    debug_address = "0.0.0.0",
+    debug_port = 9001,
+    host = "0.0.0.0",
+    port = 8101,
+}
+
+ip_config.game = {
+    game0 = {
+        debug_address = "0.0.0.0",
+        debug_port = 9002,
+        address = "0.0.0.0",        -- server监听地址
+        public_address = "192.168.100.233",   -- client连接地址
+        port = 8547,
+    },
+    game1 = {
+        debug_address = "0.0.0.0",
+        debug_port = 9003,
+        address = "0.0.0.0",
+        public_address = "192.168.100.233",
+        port = 8548,
     }
 }
 

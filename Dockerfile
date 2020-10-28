@@ -11,9 +11,6 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
     readline-dev \
     tzdata
 
-sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories 
-apk update && apk add --no-cache --virtual .build-deps git make autoconf g++ readline-dev tzdata
-
 ENV TZ Asia/Shanghai
 
 #编译
@@ -46,9 +43,3 @@ ENV TZ Asia/Shanghai
 FROM server-run
 
 COPY --from=server-built /app /app
-COPY ./game_config ./app/game_config
-COPY ./pids ./app/pids
-COPY ./proto ./app/proto
-COPY ./script ./app/script
-COPY ./service_config ./app/service_config
-COPY ./run.sh ./app/run.sh

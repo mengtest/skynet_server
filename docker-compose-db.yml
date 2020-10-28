@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  db:
+    build: .
+    container_name: 'db' 
+    restart: always
+    environment: 
+      TZ: Asia/Shanghai
+    working_dir: /app
+    volumes:
+    - ./game_config:/app/game_config
+    - ./service_config:/app/service_config
+    - ./pids:/app/pids
+    - ./proto:/app/proto
+    - ./script:/app/script
+    - ./logs:/app/logs
+    - ./run.sh:/app/run.sh
+    ports: 
+      - "9000:9000"
+      - "5001:5001"
+    command: ["/app/run.sh", "db"]

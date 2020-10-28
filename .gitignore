@@ -12,3 +12,5 @@
 *.DS_Store
 /.vscode
 *.pid
+/mysqldata
+/redisdata

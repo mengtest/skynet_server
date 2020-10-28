@@ -1,6 +1,4 @@
 local skynet = require "skynet"
-local profile = require "skynet.profile"
-local config = require "service_config.base_config"
 
 local syslog = {
     prefix = {
@@ -12,9 +10,13 @@ local syslog = {
     }
 }
 
-local level
-function syslog.level(lv)
+local level = 1
+function syslog.set_level(lv)
     level = lv
+end
+
+function syslog.get_level()
+    return level
 end
 
 function syslog.format(priority, fmt, ...)
@@ -31,14 +33,8 @@ local function write(priority, ...)
     end
 end
 
--- 这边看一下消耗...经常log出现endless loop提示...
 function syslog.debug(...)
-    profile.start()
     write(1, ...)
-    local time = profile.stop()
-    if time > 1 then
-        print("log.debug cost time:" .. time)
-    end
 end
 
 function syslog.info(...)
@@ -56,7 +52,5 @@ end
 function syslog.error(...)
     write(5, ...)
 end
-
-syslog.level(tonumber(config.log_level) or 3)
 
 return syslog

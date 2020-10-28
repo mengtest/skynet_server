@@ -3,8 +3,6 @@ local mysql_ip_config = ip_config.redis
 
 local conf
 
-local host = "192.168.130.64"
-local port = 6379
 local db = 0
 
 local center = {

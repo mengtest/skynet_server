@@ -5,7 +5,7 @@ local conf
 
 local database = "skynet"
 local user = "root"
-local password = "123456"
+local password = "712z0hyzRmbVOs5G"
 local max_packet_size = 1024 * 1024
 
 local function on_connect(db)
