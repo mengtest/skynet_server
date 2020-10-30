@@ -1,21 +1,20 @@
 root = "$ROOT/"
-skynet_path = "3rd/skynet/"
-so_root = "bin/"
+bin_root = "bin/"
 script_root = "script/"
 
 -- My path
 luaservice = script_root.."service/?.lua;"..script_root.."lualib/db/?.lua;"
 lua_path = "?.lua;"..script_root.."lualib/?.lua;"..script_root.."lualib/base/?.lua;"..script_root.."lualib/global/?.lua;"
-lua_cpath = so_root.."luaclib/?.so;"
-cpath = so_root.."cservice/?.so;"
+lua_cpath = bin_root.."luaclib/?.so;"
+cpath = bin_root.."cservice/?.so;"
 
 -- skynet path
-luaservice = luaservice..skynet_path.."service/?.lua;"
-lua_path = lua_path..skynet_path.."lualib/?.lua;"..skynet_path.."lualib/skynet/?.lua;"
-lua_cpath = lua_cpath..skynet_path.."luaclib/?.so;"
-cpath = cpath..skynet_path.."cservice/?.so;"
+luaservice = luaservice..bin_root.."service/?.lua;"
+lua_path = lua_path..bin_root.."lualib/?.lua;"..bin_root.."lualib/skynet/?.lua;"
+lua_cpath = lua_cpath..bin_root.."luaclib/?.so;"
+cpath = cpath..bin_root.."cservice/?.so;"
 
 logservice = "syslog"
-lualoader = skynet_path.."lualib/loader.lua"
+lualoader = bin_root.."lualib/loader.lua"
 preload = script_root.."lualib/global/preload.lua"
 cluster = "service_config/cluster/cluster_name.lua"

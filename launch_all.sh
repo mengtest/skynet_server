@@ -19,3 +19,8 @@ $ROOT/run.sh db -D
 $ROOT/run.sh login -D
 $ROOT/run.sh game0 -D
 $ROOT/run.sh game1 -D
+
+while true
+do
+  sleep 1
+done

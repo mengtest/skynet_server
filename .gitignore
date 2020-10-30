@@ -3,8 +3,6 @@
 *.so
 *.rdb
 *.log
-/cservice
-/luaclib
 /bin
 
 *.dSYM
@@ -12,5 +10,4 @@
 *.DS_Store
 /.vscode
 *.pid
-/mysqldata
-/redisdata
+/data

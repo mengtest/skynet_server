@@ -26,5 +26,4 @@ do
 	esac
 done
 
-
 $ROOT/bin/skynet $ROOT/service_config/launch_config/$name.config

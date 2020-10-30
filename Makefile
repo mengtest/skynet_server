@@ -40,6 +40,10 @@ lib:$(LUACLIB_OBJ) $(CSERVICE_OBJ) ${LUACLIB_PATH}/lfs.so ${LUACLIB_PATH}/cjson.
 
 copyfiles:
 	@cp -rf $(SKYNET_ROOT)/skynet $(SERVICE_BIN)
+	@cp -rf $(SKYNET_ROOT)/cservice $(SERVICE_BIN)
+	@cp -rf $(SKYNET_ROOT)/luaclib $(SERVICE_BIN)
+	@cp -rf $(SKYNET_ROOT)/lualib $(SERVICE_BIN)
+	@cp -rf $(SKYNET_ROOT)/service $(SERVICE_BIN)
 
 $(LUACLIB_OBJ) : $(LUACLIB_PATH)/%.so : lua-%.c 
 	@echo "	$@"
