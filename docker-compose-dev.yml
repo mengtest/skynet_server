@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+  db:
+    image: db:latest
+    container_name: 'db'
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./logs:/app/logs
+    links: 
+    - redis
+    - mysql
+    depends_on: 
+    - redis
+    - mysql
+    ports: 
+      - "9000:9000"
+    command: ["/app/run.sh", "db"]
+  login:
+    image: login:latest
+    container_name: 'login'
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./logs:/app/logs
+    links: 
+    - db
+    ports: 
+      - "9001:9001"
+      - "8101:8101"
+    command: ["/app/run.sh", "login"]
+  game0:
+    image: game:latest
+    container_name: 'game0'
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./logs:/app/logs
+    - ./game_config:/app/game_config
+    links: 
+    - login
+    - db
+    ports: 
+      - "9002:9002"
+      - "8547:8547"
+    command: ["/app/run.sh", "game0"]
+  game1:
+    image: game:latest
+    container_name: 'game1'
+    working_dir: /app
+    environment: 
+      TZ: Asia/Shanghai
+    volumes:
+    - ./logs:/app/logs
+    - ./game_config:/app/game_config
+    links: 
+    - login
+    - db
+    ports: 
+      - "9003:9003"
+      - "8547:8547"
+    command: ["/app/run.sh", "game1"]
+  redis:
+    image: redis:alpine 
+    container_name: 'redis'
+    restart: always
+    environment: 
+      TZ: Asia/Shanghai
+      volumes: 
+        - ./redisdata:/data
+    ports: 
+      - "6379:6379" 
+  mysql:
+    image: mysql:5.7.31
+    container_name: 'mysql'
+    restart: always
+    environment: 
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: root 
+      MYSQL_DATABASE: skynet 
+    volumes:
+    - ./mysqldata:/var/lib/mysql
+    ports: 
+      - "3306:3306"
