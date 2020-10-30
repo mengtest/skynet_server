@@ -18,7 +18,7 @@ skynet.start(
 
         --每个服务生成N个机器人
         for k, v in pairs(robot_mgr) do
-            skynet.call(v, "lua", "init", k - 1, robot_count, "game0", "127.0.0.1", 8101)
+            skynet.call(v, "lua", "init", k - 1, robot_count, "game0", "192.168.100.233", 8101)
         end
 
         --机器人Run

@@ -1,76 +1,73 @@
 version: '3.8'
 services:
   db:
-    image: db:latest
-    container_name: 'db'
-    working_dir: /app
+    build: .
+    container_name: 'db' 
+    restart: always
     environment: 
       TZ: Asia/Shanghai
+    working_dir: /app
     volumes:
-    - ./logs:/app/logs
-    links: 
-    - redis
-    - mysql
-    depends_on: 
-    - redis
-    - mysql
+      - ./logs:/app/logs
     ports: 
       - "9000:9000"
+      - "5001:5001"
+    depends_on: 
+      - redis
+      - mysql
     command: ["/app/run.sh", "db"]
   login:
-    image: login:latest
-    container_name: 'login'
-    working_dir: /app
+    build: .
+    container_name: 'login' 
+    restart: always
     environment: 
       TZ: Asia/Shanghai
+    working_dir: /app
     volumes:
-    - ./logs:/app/logs
-    links: 
-    - db
+      - ./logs:/app/logs
     ports: 
       - "9001:9001"
+      - "5000:5000"
       - "8101:8101"
     command: ["/app/run.sh", "login"]
   game0:
-    image: game:latest
-    container_name: 'game0'
-    working_dir: /app
+    build: .
+    container_name: 'game' 
+    restart: always
     environment: 
       TZ: Asia/Shanghai
+    working_dir: /app
     volumes:
-    - ./logs:/app/logs
     - ./game_config:/app/game_config
-    links: 
-    - login
-    - db
+    - ./logs:/app/logs
     ports: 
       - "9002:9002"
+      - "5002:5002"
       - "8547:8547"
     command: ["/app/run.sh", "game0"]
   game1:
-    image: game:latest
-    container_name: 'game1'
-    working_dir: /app
+    build: .
+    container_name: 'game' 
+    restart: always
     environment: 
       TZ: Asia/Shanghai
+    working_dir: /app
     volumes:
-    - ./logs:/app/logs
     - ./game_config:/app/game_config
-    links: 
-    - login
-    - db
+    - ./logs:/app/logs
     ports: 
-      - "9003:9003"
+      - "9002:9002"
+      - "5002:5002"
       - "8547:8547"
     command: ["/app/run.sh", "game1"]
   redis:
     image: redis:alpine 
-    container_name: 'redis'
+    container_name: 'redis' 
     restart: always
     environment: 
       TZ: Asia/Shanghai
-      volumes: 
-        - ./redisdata:/data
+    volumes: 
+      - ./redisdata:/data
     ports: 
       - "6379:6379" 
   mysql:
@@ -79,7 +76,7 @@ services:
     restart: always
     environment: 
       TZ: Asia/Shanghai
-      MYSQL_ROOT_PASSWORD: root 
+      MYSQL_ROOT_PASSWORD: 712z0hyzRmbVOs5G
       MYSQL_DATABASE: skynet 
     volumes:
     - ./mysqldata:/var/lib/mysql
