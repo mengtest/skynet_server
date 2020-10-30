@@ -16,9 +16,9 @@ ENV TZ Asia/Shanghai
 #编译
 FROM alpine-builder as server-built
 
-RUN git clone https://github.com/dingdalong/skynet_test.git /app\
-    && cd app && git submodule update --init && make linux \
-    && rm -rf Makefile src .git ./3rd \
+COPY . /app
+RUN cd app && git submodule update --init && make cleanall && make linux \
+    && rm -rf .git 3rd src tools .dockerignore .gitignore .gitmodules *.yml Dockerfile *.txt Makefile *.md LICENSE \
     && apk del .build-deps 
 
 #构建运行环境

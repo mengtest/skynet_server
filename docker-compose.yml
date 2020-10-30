@@ -2,13 +2,13 @@ version: '3.8'
 services:
   server:
     image: skynet_server:latest
-    container_name: 'skynet_server' 
+    container_name: 'server' 
     environment: 
       TZ: Asia/Shanghai
     working_dir: /app
     volumes:
       - ./game_config:/app/game_config
-      - ./logs:/app/logs
+      - ./logs:/app/bin/logs
     ports: 
       - "9000:9000"
       - "9001:9001"

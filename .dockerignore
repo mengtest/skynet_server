@@ -3,15 +3,13 @@
 *.DS_Store
 /.vscode
 
-/3rd
+/bin
+/data
 /logs
-/src
 .dockerignore
 .gitignore
-.gitmodules
 *.yml
 Dockerfile
 *.txt
-Makefile
 *.md
 LICENSE
