@@ -32,6 +32,10 @@
 
 * `<server_name>`指的是`service_config/launch_config`中根据`<server_name>.config`
 
+## Docker
+* 使用`docker build . -t skynet_server`生成名为`skynet_server`的docker镜像  
+    tips：我这边开发环境和`docker`都是用的`alpine`，这时候可以调整`Dockerfile`中的编译部分，去掉编译，直接用拷过去的数据构建镜像，这样不需要重新编译会快一点，用于测试。
+* 使用`docker-compose up -d`启动环境
 ## 可能遇到的问题
 
 * 关于`make`，不同平台请使用不同参数`linux/macosx/freebsd`
@@ -46,7 +50,7 @@
     在`service_config`目录下，配置`redis`和`mysql`的地址和账号密码，并配置数据库`skynet`（也可以直接根据情况修改），将`tools`中的`sql`文件导入到`mysql`中
 
 ## Windows下的开发环境
-我这边在`windows 10`下使用`wsl`做开发
+我这边在`windows 10`下使用[`wsl`](https://docs.microsoft.com/zh-cn/windows/wsl/)做开发
 1. 启用`wsl  `
     1. 启用`linux子系统`  
         以管理员身份打开`Windows PowerShell（右击任务栏的windows徽标可以找到）`，输入以下内容
