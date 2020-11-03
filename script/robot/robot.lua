@@ -120,7 +120,7 @@ local function init_method(robot)
         self:send_request(
             "handshake",
             {
-                clientkey = crypt.base64encode(crypt.dhexchange(self.clientkey))
+                clientkey = crypt.dhexchange(self.clientkey)
             }
         )
 
@@ -151,7 +151,8 @@ function _robot.create(map_id, server, ip, port, robot_index)
         token = {
             server = server,
             user = "Robot_" .. robot_index,
-            pass = "password"
+            pass = "password",
+            region = 1
         },
         challenge = nil,
         clientkey = nil,

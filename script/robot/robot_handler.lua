@@ -21,8 +21,8 @@ _handler:release(
 )
 
 function RESPONSE:handshake(args)
-    self.challenge = crypt.base64decode(args.challenge)
-    self.serverkey = crypt.base64decode(args.serverkey)
+    self.challenge = args.challenge
+    self.serverkey = args.serverkey
 
     -- 根据获取的serverkey 和 clientkey计算出secret
     self.secret = crypt.dhsecret(self.serverkey, self.clientkey)
@@ -32,17 +32,18 @@ function RESPONSE:handshake(args)
     self:send_request(
         "challenge",
         {
-            hmac = crypt.base64encode(self.hmac)
+            hmac = self.hmac
         }
     )
 end
 
 local function encode_token(token)
     return string.format(
-        "%s@%s:%s",
-        crypt.base64encode(token.user),
-        crypt.base64encode(token.server),
-        crypt.base64encode(token.pass)
+        "%s@%s:%s$%s",
+        token.user,
+        token.server,
+        token.pass,
+        token.region
     )
 end
 
@@ -54,7 +55,7 @@ function RESPONSE:challenge(args)
     self:send_request(
         "auth",
         {
-            etokens = crypt.base64encode(etoken)
+            etokens = etoken
         }
     )
 end
@@ -66,16 +67,16 @@ local function login(self)
     local handshake =
         string.format(
         "%s@%s#%s:%d",
-        crypt.base64encode(self.token.user),
-        crypt.base64encode(self.token.server),
-        crypt.base64encode(self.subid),
+        self.token.user,
+        self.token.server,
+        self.subid,
         self.index
     )
     local hmac = crypt.hmac64(crypt.hashkey(handshake), self.secret)
     self:send_request(
         "login",
         {
-            handshake = handshake .. ":" .. crypt.base64encode(hmac)
+            handshake = handshake .. ":" .. hmac
         }
     )
 end
@@ -273,7 +274,7 @@ function REQUEST:subid(args)
     socket.close(self.fd)
 
     -- 通过确认信息获取subid
-    self.subid = crypt.base64decode(string.sub(result, 5))
+    self.subid = string.sub(result, 5)
 
     --log.error("login ok, subid=" .. self.subid)
     self.gate_ip = args.gate_ip

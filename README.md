@@ -72,7 +72,7 @@
     4. 设置时区`ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone`  
 
 * 关于`wsl2`  
-    `docker desktop`这边使用`wsl`的话只能使用`wsl2`，或者使用`hyper-v`。`wsl2`这边使用上有一个不方便的，就是监听的端口只能本机访问，没有对外映射，`github`上有解决方案，需要编辑并运行一个`shell`，感觉挺麻烦的，所以选择就用`wsl 1`做本地开发测试即可。这两个版本是可以共存的，`wsl -h`查看设置版本。
+    `docker desktop`这边使用`wsl`的话只能使用`wsl2`，或者使用`hyper-v`。`wsl2`这边使用上有一个不方便的，就是监听的端口只能本机访问，没有对外映射，[github](https://github.com/yhl452493373/WSL2-Auto-Port-Forward)上有解决方案，需要编辑并运行一个`shell`，感觉挺麻烦的，所以选择就用`wsl 1`做本地开发测试即可。这两个版本是可以共存的，`wsl -h`查看设置版本。
 
 * 关于`windows 10`版本  
     `wsl`的支持需要较新的版本，`wsl2`版本要求更高。目前`20H2`是全部支持的。

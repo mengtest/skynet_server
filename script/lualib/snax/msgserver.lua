@@ -5,8 +5,6 @@ local crypt = require "skynet.crypt"
 local socketdriver = require "skynet.socketdriver"
 local sprotoloader = require "sprotoloader"
 local assert = assert
-local b64encode = crypt.base64encode
-local b64decode = crypt.base64decode
 
 --[[
 
@@ -18,7 +16,7 @@ Protocol:
 
 	Client -> Server :
 
-	base64(uid)@base64(server)#base64(subid):index:base64(hmac)
+	uid@server#subid:index:hmac
 
 	Server -> Client
 
@@ -94,14 +92,14 @@ local host
 
 -- 解析username
 function server.userid(username)
-    -- base64(uid)@base64(server)#base64(subid)
+    -- uid@server#subid
     local uid, servername, subid = username:match "([^@]*)@([^#]*)#(.*)"
-    return b64decode(uid), b64decode(subid), b64decode(servername)
+    return uid, subid, servername
 end
 
 -- 合成username
 function server.username(uid, subid, servername)
-    return string.format("%s@%s#%s", b64encode(uid), b64encode(servername), b64encode(tostring(subid)))
+    return string.format("%s@%s#%s", uid, servername, tostring(subid))
 end
 
 -- 玩家下线
@@ -188,8 +186,6 @@ function server.start(conf)
             return "404 User Not Found"
         end
         local idx = assert(tonumber(index))
-        hmac = b64decode(hmac)
-
         if idx <= u.version then
             return "403 Index Expired"
         end

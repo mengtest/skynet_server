@@ -10,19 +10,16 @@ local assert = assert
 --[[
 
 Protocol:
-
-	line (\n) based text protocol
-
-	1. Server->Client : base64(8bytes random challenge)
-	2. Client->Server : base64(8bytes handshake client key)
+	1. Server->Client : 8bytes random challenge
+	2. Client->Server : 8bytes handshake client key
 	3. Server: Gen a 8bytes handshake server key
-	4. Server->Client : base64(DH-Exchange(server key))
+	4. Server->Client : DH-Exchange(server key)
 	5. Server/Client secret := DH-Secret(client key/server key)
-	6. Client->Server : base64(HMAC(challenge, secret))
-	7. Client->Server : DES(secret, base64(token))
+	6. Client->Server : HMAC(challenge, secret)
+	7. Client->Server : DES(secret, token)
 	8. Server : call auth_handler(token) -> server, uid (A user defined method)
 	9. Server : call login_handler(server, uid, secret) ->subid (A user defined method)
-	10. Server->Client : 200 base64(subid)
+	10. Server->Client : 200 subid
 
 Error Code:
 	401 Unauthorized . unauthorized by auth_handler
@@ -30,7 +27,7 @@ Error Code:
 	406 Not Acceptable . already in login (disallow multi login)
 
 Success:
-	200 base64(subid)
+	200 subid
 ]]
 local host
 local request
@@ -89,14 +86,15 @@ local function launch_slave(auth_handler)
         assert(type == "REQUEST")
         if name == "handshake" then
             assert(args and args.clientkey, "invalid handshake request")
-            clientkey = crypt.base64decode(args.clientkey)
+            clientkey = args.clientkey
+            skynet.error(string.format("[%s]", clientkey))
             if #clientkey ~= 8 then
                 error "Invalid client key"
             end
             local msg =
                 response {
-                challenge = crypt.base64encode(challenge),
-                serverkey = crypt.base64encode(crypt.dhexchange(serverkey))
+                challenge = challenge,
+                serverkey = crypt.dhexchange(serverkey)
             }
             write("handshake", fd, msg)
         end
@@ -109,7 +107,7 @@ local function launch_slave(auth_handler)
             assert(args and args.hmac, "invalid challenge request")
             local hmac = crypt.hmac64(challenge, secret)
             -- 对比两边利用 challenge 和 secret 生成的结果
-            if hmac ~= crypt.base64decode(args.hmac) then
+            if hmac ~= args.hmac then
                 error "challenge failed"
             else
                 local msg =
@@ -127,14 +125,14 @@ local function launch_slave(auth_handler)
         if name == "auth" then
             assert(args and args.etokens, "invalid auth request")
             -- 利用 secret 解密
-            token = crypt.desdecode(secret, crypt.base64decode(args.etokens))
+            token = crypt.desdecode(secret, args.etokens)
         end
 
         -- call logind中的auth_handler
         -- 返回了要登录的服务器和账号
-        local ok, server, uid = pcall(auth_handler, token)
+        local ok, server, uid, region = pcall(auth_handler, token)
 
-        return ok, server, uid, secret
+        return ok, server, uid, secret, region 
     end
 
     local function ret_pack(ok, err, ...)
@@ -178,7 +176,7 @@ local user_login = {}
 local function accept(conf, s, fd, addr)
     -- call slave auth
     -- 去 slave 认证
-    local ok, server, uid, secret = skynet.call(s, "lua", fd, addr)
+    local ok, server, uid, secret, region = skynet.call(s, "lua", fd, addr)
     -- slave will accept(start) fd, so we can write to fd later
     -- 根据认证结果
     if not ok then
@@ -195,8 +193,9 @@ local function accept(conf, s, fd, addr)
         error(server)
     end
 
+    local user_index = conf.user_index(uid, region)
     if not conf.multilogin then
-        if user_login[uid] then
+        if user_login[user_index] then
             send_request(
                 "response 406",
                 fd,
@@ -205,16 +204,16 @@ local function accept(conf, s, fd, addr)
                     result = "406 Not Acceptable"
                 }
             )
-            error(string.format("User %s is already login", uid))
+            error(string.format("User %s on region %s is already login", uid, region))
         end
 
-        user_login[uid] = true
+        user_login[user_index] = true
     end
 
     -- 通知gameserver登陆
-    local ok, err, _gate_ip, _gate_port = pcall(conf.login_handler, server, uid, secret)
+    local ok, err, _gate_ip, _gate_port = pcall(conf.login_handler, server, region, uid, secret)
     -- unlock login
-    user_login[uid] = nil
+    user_login[user_index] = nil
 
     if ok then
         err = err or ""
@@ -223,7 +222,7 @@ local function accept(conf, s, fd, addr)
             fd,
             "subid",
             {
-                result = "200 " .. crypt.base64encode(err),
+                result = "200 " .. err,
                 gate_ip = _gate_ip,
                 gate_port = _gate_port
             }

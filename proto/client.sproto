@@ -37,7 +37,8 @@ ping 1 {
 #握手
 handshake 2 {
 	request {
-		clientkey 0 : string
+		# clientkey = crypt.randomkey()
+		clientkey 0 : string # crypt.dhexchange(clientkey)
 	}
 	response {
 		challenge 0 : string
@@ -47,24 +48,27 @@ handshake 2 {
 
 challenge 3 {
 	request {
-		hmac 0 : string
+		hmac 0 : string # crypt.hmac64(challenge, crypt.dhsecret(serverkey, clientkey))
 	}
 	response {
-		result 0 : string
+		result 0 : string # 提示
 	}
 }
 
 #账号认证
 auth 4 {
 	request {
-		etokens 0 : string
+		# secret = crypt.dhsecret(serverkey, clientkey)
+		etokens 0 : string # crypt.desencode(secret, account@server:password)
 	}
 }
 
 #登录game
 login 5 {
 	request {
-		handshake 0 : string
+		# handshake = account@server#subid:index
+		# hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
+		handshake 0 : string # handshake:hmac
 	}
 	response {
 		result 0 : string

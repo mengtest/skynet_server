@@ -13,6 +13,7 @@ local servername
 local map_mgr
 local gate_ip
 local gate_port
+local region = 1
 
 -- login server disallow multi login, so login_handler never be reentry
 -- call by login server
@@ -70,7 +71,7 @@ function server.logout_handler(uid, subid, agent)
         if loginservice == nil then
             loginservice = cluster.proxy("login", "@loginservice")
         end
-        skynet.send(loginservice, "lua", "logout", uid, subid)
+        skynet.send(loginservice, "lua", "logout", uid, region)
     end
 end
 
