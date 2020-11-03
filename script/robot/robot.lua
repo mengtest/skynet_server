@@ -151,6 +151,7 @@ function _robot.create(map_id, server, ip, port, robot_index)
         token = {
             server = server,
             user = "Robot_" .. robot_index,
+            uid = nil,
             pass = "password",
             region = 1
         },

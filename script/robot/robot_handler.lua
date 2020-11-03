@@ -39,7 +39,7 @@ end
 
 local function encode_token(token)
     return string.format(
-        "%s@%s:%s$%s",
+        "%s@%s$%s:%s",
         token.user,
         token.server,
         token.pass,
@@ -64,24 +64,26 @@ local function login(self)
     -- 连接到gameserver
     self.fd = assert(socket.open(self.gate_ip, self.gate_port))
     --if true then return end
-    local handshake =
+    local username =
         string.format(
-        "%s@%s#%s:%d",
-        self.token.user,
+        "%s@%s#%s",
+        self.token.uid,
         self.token.server,
-        self.subid,
-        self.index
+        self.subid
     )
-    local hmac = crypt.hmac64(crypt.hashkey(handshake), self.secret)
+    local hmac = crypt.hmac64(crypt.hashkey(username..":"..self.index), self.secret)
     self:send_request(
         "login",
         {
-            handshake = handshake .. ":" .. hmac
+            username = username,
+            index = self.index,
+            hmac = hmac
         }
     )
 end
 
 function RESPONSE:login(args)
+    log.error(args.result)
     log.error("send ping")
     self:send_request(
         "ping",
@@ -279,6 +281,7 @@ function REQUEST:subid(args)
     --log.error("login ok, subid=" .. self.subid)
     self.gate_ip = args.gate_ip
     self.gate_port = args.gate_port
+    self.token.uid = args.uid
     login(self)
 end
 

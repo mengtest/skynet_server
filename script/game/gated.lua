@@ -16,45 +16,34 @@ local gate_port
 local region = 1
 
 -- login server disallow multi login, so login_handler never be reentry
--- call by login server
--- login server通知用户登陆game server
-function server.login_handler(uid, secret)
+function server.login_handler(uid, region, secret)
     if users[uid] then
         log.warning("%s is already login", uid)
     end
 
     internal_id = internal_id + 1
-    local id = internal_id -- don't use internal_id directly
-    local username = msgserver.username(uid, id, servername)
-    -- agent pool
+    local subid = internal_id -- 不能直接使用internal_id
+    local username = msgserver.username(uid, subid, servername)
     local agent = skynet.call(agent_pool, "lua", "get_agent_address")
 
     local u = {
         username = username,
         agent = agent,
         uid = uid,
-        subid = id
+        subid = subid
     }
 
-    -- trash subid (no used)
-    -- msgagent记录
-    skynet.call(agent, "lua", "login", uid, id, secret)
-
+    skynet.call(agent, "lua", "login", uid, subid, secret)
     users[uid] = u
     username_map[username] = u
-
-    -- 将用户信息记录到msgserver
-    -- 用户在与msgseerver连接的时候，这里用于验证
     msgserver.login(username, secret)
 
-    -- you should return unique subid
-    return id, gate_ip, gate_port
+    return subid, gate_ip, gate_port
 end
 
 -- call by self
 function server.auth_handler(username, fd)
     local uid = msgserver.userid(username)
-
     skynet.call(users[uid].agent, "lua", "auth", fd) -- 通知agent认证成功，玩家真正处于登录状态了
 end
 

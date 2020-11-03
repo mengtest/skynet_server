@@ -6,7 +6,7 @@ local conf = {}
 -- columns 数据表字段
 conf["tbl_account"] = {
     redis_key = "uid",
-    index_key = nil,
+    index_key = "account",
     index_value = nil,
     columns = nil
 }

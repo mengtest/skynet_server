@@ -132,6 +132,7 @@ end
 
 -- gate 通知 agent 认证成功
 function CMD.auth(source, fd)
+    log.notice("%s is auth", uid)
     user.fd = fd
 
     REQUEST = user.REQUEST

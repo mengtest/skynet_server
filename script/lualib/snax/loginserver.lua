@@ -64,7 +64,6 @@ local function send_request(service, fd, name, args)
     write(service, fd, str)
 end
 
--- 加载proto
 local function load_proto()
     host = sprotoloader.load(1):host "package"
     request = host:attach(sprotoloader.load(2))
@@ -72,16 +71,12 @@ end
 
 local function launch_slave(auth_handler)
     local function auth(fd, addr)
-        -- 和client握手，生成token
-        -- set socket buffer limit (8K)
-        -- If the attacker send large package, close the socket
         socket.limit(fd, 8192)
 
-        -- 将challenge发送给client
         local challenge = crypt.randomkey()
         local serverkey = crypt.randomkey()
         local clientkey
-        -- 获取client的handshake
+        
         local type, name, args, response = read_msg(fd)
         assert(type == "REQUEST")
         if name == "handshake" then
@@ -106,7 +101,6 @@ local function launch_slave(auth_handler)
         if name == "challenge" then
             assert(args and args.hmac, "invalid challenge request")
             local hmac = crypt.hmac64(challenge, secret)
-            -- 对比两边利用 challenge 和 secret 生成的结果
             if hmac ~= args.hmac then
                 error "challenge failed"
             else
@@ -117,19 +111,15 @@ local function launch_slave(auth_handler)
                 write("auth", fd, msg)
             end
         end
-        -- 这里是前端发过来的 token
-        -- 里面是按照约定的格式生成的账号、密码和需要登录的区服组成的字符串
+        
         local token
         type, name, args, response = read_msg(fd)
         assert(type == "REQUEST")
         if name == "auth" then
             assert(args and args.etokens, "invalid auth request")
-            -- 利用 secret 解密
             token = crypt.desdecode(secret, args.etokens)
         end
 
-        -- call logind中的auth_handler
-        -- 返回了要登录的服务器和账号
         local ok, server, uid, region = pcall(auth_handler, token)
 
         return ok, server, uid, secret, region 
@@ -149,14 +139,12 @@ local function launch_slave(auth_handler)
 
     local function auth_fd(fd, addr)
         skynet.error(string.format("connect from %s (fd = %d)", addr, fd))
-        -- 开始接受client的消息
         socket.start(fd) -- may raise error here
         local msg, len = ret_pack(pcall(auth, fd, addr))
         socket.abandon(fd) -- never raise error here
         return msg, len
     end
 
-    -- 接受来自login master的认证请求
     skynet.dispatch(
         "lua",
         function(_, _, ...)
@@ -170,15 +158,10 @@ local function launch_slave(auth_handler)
     )
 end
 
--- 正在登陆的玩家list
 local user_login = {}
 
 local function accept(conf, s, fd, addr)
-    -- call slave auth
-    -- 去 slave 认证
     local ok, server, uid, secret, region = skynet.call(s, "lua", fd, addr)
-    -- slave will accept(start) fd, so we can write to fd later
-    -- 根据认证结果
     if not ok then
         if ok ~= nil then
             send_request(
@@ -193,9 +176,8 @@ local function accept(conf, s, fd, addr)
         error(server)
     end
 
-    local user_index = conf.user_index(uid, region)
     if not conf.multilogin then
-        if user_login[user_index] then
+        if user_login[uid] then
             send_request(
                 "response 406",
                 fd,
@@ -204,16 +186,14 @@ local function accept(conf, s, fd, addr)
                     result = "406 Not Acceptable"
                 }
             )
-            error(string.format("User %s on region %s is already login", uid, region))
+            error(string.format("uid %s on region %s is already login", uid, region))
         end
 
-        user_login[user_index] = true
+        user_login[uid] = true
     end
 
-    -- 通知gameserver登陆
     local ok, err, _gate_ip, _gate_port = pcall(conf.login_handler, server, region, uid, secret)
-    -- unlock login
-    user_login[user_index] = nil
+    user_login[uid] = nil
 
     if ok then
         err = err or ""
@@ -223,6 +203,7 @@ local function accept(conf, s, fd, addr)
             "subid",
             {
                 result = "200 " .. err,
+                uid = uid,
                 gate_ip = _gate_ip,
                 gate_port = _gate_port
             }
@@ -248,7 +229,6 @@ local function launch_master(conf)
     local slave = {}
     local balance = 1
 
-    -- login master 收到的lua类消息，处理logind中CMD命令
     skynet.dispatch(
         "lua",
         function(_, source, command, ...)
@@ -256,17 +236,12 @@ local function launch_master(conf)
         end
     )
 
-    -- 根据配置中conf.instance的的数量启动login slave
-    -- 其实就是在启动loginserver，但是在start中会检测是否有master
-    -- 当有master存在的时候，就是启动slave了
     for _ = 1, instance do
         table.insert(slave, skynet.newservice(SERVICE_NAME))
     end
 
     skynet.error(string.format("login server listen at : %s %d", host, port))
-    -- login server启动监听
     local id = socket.listen(host, port)
-    -- 接收到新的socket连接的时候，就会触发这里
     socket.start(
         id,
         function(fd, addr)
@@ -275,7 +250,7 @@ local function launch_master(conf)
             if balance > #slave then
                 balance = 1
             end
-            -- 让连接去slave中认证
+            
             local ok, err = pcall(accept, conf, s, fd, addr)
             if not ok then
                 if err ~= socket_error then
@@ -289,25 +264,17 @@ local function launch_master(conf)
     )
 end
 
--- 在logind中调用,将logind中的方法注册到这里来
--- 调用的时候,启动了launch_master
 local function login(conf)
     local name = "." .. (conf.name or "login")
     skynet.start(
         function()
-            -- 查询launch_master是否启动
             local loginmaster = skynet.localname(name)
             if loginmaster then
-                -- 已经启动了launch_master的时候
-                -- 启动launch_slave
-                -- 用于与客户端握手校验
                 local auth_handler = assert(conf.auth_handler)
                 launch_master = nil
                 conf = nil
                 launch_slave(auth_handler)
             else
-                -- 启动launch_master
-                -- 用于登录到login
                 launch_slave = nil
                 conf.auth_handler = nil
                 assert(conf.login_handler)

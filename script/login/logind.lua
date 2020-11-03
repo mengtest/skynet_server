@@ -9,29 +9,21 @@ local db_mgrserver
 local server_list = {}
 local user_online = {}
 
-function login_server.user_index(uid, region)
-    return string.format("%s@%s", uid, region)
-end
-
 function login_server.auth_handler(token)
-    local uid, server_name, password, region = token:match("([^@]+)@([^:]+):([^$]+)$(.+)")
-    uid = uid
-    server_name = server_name
-    password = password
-    log.debug("%s %s %s %s %s", token, uid, server_name, password, region)
+    local account, server_name, password, region = token:match("([^@]+)@([^:]+)$([^$]+):(.+)")    
     assert(password == "password", "Invalid password")
-    log.debug("%s@%s is auth, password is %s", uid, server_name, password)
+    log.debug("%s@%s is auth, password is %s", account, server_name, password)
     if not db_mgrserver then
         db_mgrserver = cluster.proxy("db", "@db_mgr")
     end
 
     -- 数据库查询账号信息，没有就创建
-    local result = skynet.call(db_mgrserver, "lua", "tbl_account", "auth", uid, password)
+    local uid = skynet.call(db_mgrserver, "lua", "tbl_account", "auth", account, region, password)
     local str = "auth false"
-    if result then
+    if uid then
         str = "auth success"
     end
-    log.debug("%s " .. str, uid)
+    log.debug("%s %s" .. str, account, uid)
     return server_name, uid, region
 end
 
@@ -46,8 +38,7 @@ function login_server.login_handler(server_name, region, uid, secret)
     
     assert(gated, "Unknown server name :" .. server_name)
     
-    local user_index = login_server.user_index(uid, region)
-    local last = user_online[user_index]
+    local last = user_online[uid]
     -- 已经登陆了的话，把上次登录的踢下线
     if last then
         skynet.call(last.gated, "lua", "kick", uid, last.subid)
@@ -55,9 +46,9 @@ function login_server.login_handler(server_name, region, uid, secret)
     end
     
     -- 向服务器发送登陆请求
-    local subid, gate_ip, gate_port = skynet.call(gated, "lua", "login", uid, secret)
+    local subid, gate_ip, gate_port = skynet.call(gated, "lua", "login", uid, region, secret)
     subid = tostring(subid)
-    user_online[user_index] = {
+    user_online[uid] = {
         gated = gated,
         subid = subid,
         server_name = server_name
@@ -69,11 +60,10 @@ local CMD = {}
 
 -- 玩家下线
 function CMD.logout(uid, region)
-    local user_index = login_server.user_index(uid, region)
-    local u = user_online[user_index]
+    local u = user_online[uid]
     if u then
-        log.notice("%s@%s is logout", uid, region)
-        user_online[user_index] = nil
+        log.notice("%s@%s is logout", account, region)
+        user_online[uid] = nil
     end
 end
 

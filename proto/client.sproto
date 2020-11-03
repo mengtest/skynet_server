@@ -34,6 +34,13 @@ ping 1 {
 	}
 }
 
+# 登录流程
+# handshake -> response
+# challenge -> response
+# auth -> subid
+# 发送auth后返回subid通知是否成功，成功的话使用其中的ip和端口去连game
+# login
+
 #握手
 handshake 2 {
 	request {
@@ -59,7 +66,7 @@ challenge 3 {
 auth 4 {
 	request {
 		# secret = crypt.dhsecret(serverkey, clientkey)
-		etokens 0 : string # crypt.desencode(secret, account@server:password)
+		etokens 0 : string # crypt.desencode(secret, account@server$password:region)
 	}
 }
 
@@ -68,7 +75,9 @@ login 5 {
 	request {
 		# handshake = account@server#subid:index
 		# hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
-		handshake 0 : string # handshake:hmac
+		username 0 : string # handshake:hmac
+		index 1 : integer # handshake:hmac
+		hmac 2 : string # handshake:hmac
 	}
 	response {
 		result 0 : string

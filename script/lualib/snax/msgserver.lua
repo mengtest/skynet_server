@@ -94,7 +94,7 @@ local host
 function server.userid(username)
     -- uid@server#subid
     local uid, servername, subid = username:match "([^@]*)@([^#]*)#(.*)"
-    return uid, subid, servername
+    return tonumber(uid), subid, servername
 end
 
 -- 合成username
@@ -179,29 +179,28 @@ function server.start(conf)
     handler.error = handler.disconnect
 
     -- atomic , no yield
-    local function do_auth(fd, message, addr)
-        local username, index, hmac = string.match(message, "([^:]*):([^:]*):([^:]*)")
-        local u = user_online[username]
+    local function do_auth(fd, args, addr)
+        local u = user_online[args.username]
         if u == nil then
             return "404 User Not Found"
         end
-        local idx = assert(tonumber(index))
-        if idx <= u.version then
+        
+        if args.index <= u.version then
             return "403 Index Expired"
         end
 
-        local text = string.format("%s:%s", username, index)
+        local text = string.format("%s:%d", args.username, args.index)
         local v = crypt.hmac_hash(u.secret, text) -- equivalent to crypt.hmac64(crypt.hashkey(text), u.secret)
-        if v ~= hmac then
+        if v ~= args.hmac then
             return "401 Unauthorized"
         end
 
-        u.version = idx
+        u.version = args.index
         u.fd = fd
         u.ip = addr
         connection[fd] = u
 
-        CMD.auth_handler(username, fd)
+        CMD.auth_handler(args.username, fd)
     end
 
     local function auth(fd, addr, msg, sz)
@@ -211,10 +210,10 @@ function server.start(conf)
         local type, name, args, response = host:dispatch(message)
         assert(type == "REQUEST")
         if name == "login" then
-            assert(args and args.handshake, "invalid login gameserver handshake request")
+            assert(args and args.hmac, "invalid login gameserver request")
         end
 
-        local ok, result = pcall(do_auth, fd, args.handshake, addr)
+        local ok, result = pcall(do_auth, fd, args, addr)
         if not ok then
             skynet.error(result)
             result = "400 Bad Request"
