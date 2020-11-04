@@ -262,7 +262,7 @@ function CMD.aoi_callback(w, m)
 end
 
 -- 添加到aoi
-function CMD.character_enter(obj)
+function CMD.role_enter(obj)
     assert(obj)
     assert(obj.agent)
     assert(obj.movement)
@@ -289,7 +289,7 @@ function CMD.character_enter(obj)
 end
 
 -- 从aoi中移除
-function CMD.character_leave(obj)
+function CMD.role_leave(obj)
     assert(obj)
     log.debug("%d leave aoi", obj.temp_id)
     assert(

@@ -1,25 +1,22 @@
 local skynet = require "skynet"
-local handler = require "agent.handler"
+local base_handler = require "agent.base_handler"
 local sharetable = require "skynet.sharetable"
 local log = require "base.syslog"
 
 local REQUEST = {}
 
-local _handler = handler.new(REQUEST)
+local handler = base_handler.new(REQUEST)
 
-local user
 local instance_address
 local instance_mgr
 
-_handler:init(
-    function(u)
-        user = u
+handler:init(
+    function()
     end
 )
 
-_handler:release(
+handler:release(
     function()
-        user = nil
         if instance_address ~= nil then
             skynet.send(instance_address, "lua", "close")
             instance_address = nil
@@ -28,7 +25,7 @@ _handler:release(
 )
 
 -- 请求进入副本
-function REQUEST.enter_instance(args)
+function REQUEST.enter_instance(user, args)
     assert(args.instance_id)
     local ok = false
     local data = sharetable.query "insatnce"
@@ -43,13 +40,13 @@ function REQUEST.enter_instance(args)
             skynet.call(instance_address, "lua", "init", insatnce_data)
             local temp_id = skynet.call(instance_address, "lua", "get_temp_id")
             if temp_id > 0 then
-                user.character:set_aoi_mode("w")
-                skynet.send(user.character:get_map_address(), "lua", "character_leave", user.character:get_aoi_obj())
-                user.character:set_map_address(instance_address)
-                user.character:set_temp_id(temp_id)
-                --user.character:set_map_id(args.map_id)
+                user.role:set_aoi_mode("w")
+                skynet.send(user.role:get_map_address(), "lua", "role_leave", user.role:get_aoi_obj())
+                user.role:set_map_address(instance_address)
+                user.role:set_temp_id(temp_id)
+                --user.role:set_map_id(args.map_id)
                 ok = true
-                log.debug("enter_instance and set temp_id:" .. user.character:get_temp_id())
+                log.debug("enter_instance and set temp_id:" .. user.role:get_temp_id())
             else
                 log.debug("player enter_instance failed:" .. args.instance_id)
             end
@@ -64,4 +61,4 @@ function REQUEST.enter_instance(args)
     }
 end
 
-return _handler
+return handler

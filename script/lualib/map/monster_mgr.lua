@@ -24,7 +24,7 @@ function CMD.add_aoi_obj(monster_temp_id, aoi_obj)
             }
             -- 将我的信息发送给对方
             msg_sender.send_request(
-                "character_update",
+                "role_update",
                 {
                     info = info
                 },
@@ -48,7 +48,7 @@ function CMD.update_monster_aoi_info(enter_list, leave_list, move_list)
             }
             -- 将我的信息发送给对方
             msg_sender.send_request(
-                "character_update",
+                "role_update",
                 {
                     info = info
                 },
@@ -82,7 +82,7 @@ function CMD.update_aoi_list(monster_temp_id, enter_list, leave_list)
         }
         -- 将我的信息发送给对方
         msg_sender.send_request(
-            "character_update",
+            "role_update",
             {
                 info = info
             },
@@ -114,7 +114,7 @@ function monster_mgr.create_monster(monster_id, x, y, z)
     obj:set_temp_id(temp_id)
     assert(monster_list[temp_id] == nil)
     monster_list[temp_id] = obj
-    CMD.character_enter(obj:get_aoi_obj())
+    CMD.role_enter(obj:get_aoi_obj())
 end
 
 return monster_mgr

@@ -4,7 +4,7 @@
 	ud 2 : string
 }
 
-.character_overview{
+.role_overview{
 	uuid 0 : integer
 	level 1 : integer
 	job 2 : integer
@@ -13,13 +13,13 @@
 	create_time 5 : string
 }
 
-.character_create{
+.role_create{
 	name 0 : string
 	job 1 : integer
 	sex 2 : integer
 }
 
-.character_pos{
+.role_pos{
 	x 0 : integer
 	y 1 : integer
 	z 2 : integer
@@ -73,36 +73,34 @@ auth 4 {
 #登录game
 login 5 {
 	request {
-		# handshake = account@server#subid:index
-		# hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
-		username 0 : string # handshake:hmac
-		index 1 : integer # handshake:hmac
-		hmac 2 : string # handshake:hmac
+		username 0 : string # uid@server#subid
+		index 1 : integer
+		hmac 2 : string # crypt.hmac64(crypt.hashkey(username:index), secret)
 	}
 	response {
 		result 0 : string
 	}
 }
 
-get_character_list 6 {
+get_role_list 6 {
 	response {
-		#(uuid) is optional, means character_overview.uuid is main index.
-		character 0 : *character_overview(uuid)
+		#(uuid) is optional, means role_overview.uuid is main index.
+		role 0 : *role_overview(uuid)
 	}
 }
 
-character_create 7 {
+role_create 7 {
 	request {
 		name 0 : string
 		job 1 : integer
 		sex 2 : integer
 	}
 	response {
-		character 0 : character_overview
+		role 0 : role_overview
 	}
 }
 
-character_pick 8{
+role_pick 8{
 	request {
 		uuid 0 : integer
 	}
@@ -120,10 +118,10 @@ map_ready 9{
 
 moveto 10{
 	request {
-		pos 0 : character_pos
+		pos 0 : role_pos
 	}
 	response {
-		pos 0 : character_pos
+		pos 0 : role_pos
 	}
 }
 

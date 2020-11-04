@@ -1,20 +1,17 @@
 local enum_type = require "enum_type"
-local handler = require "agent.handler"
+local base_handler = require "agent.base_handler"
 local skynet = require "skynet"
 
 local CMD = {}
-local _handler = handler.new(nil, CMD)
-local user
+local handler = base_handler.new(nil, CMD)
 
-_handler:init(
-    function(u)
-        user = u
+handler:init(
+    function()
     end
 )
 
-_handler:release(
+handler:release(
     function()
-        user = nil
     end
 )
 
@@ -108,4 +105,4 @@ function CMD.update_aoi_list(_, enter_list, leave_list)
     )
 end
 
-return _handler
+return handler

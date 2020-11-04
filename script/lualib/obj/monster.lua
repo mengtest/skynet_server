@@ -44,7 +44,7 @@ local function init_method(monster)
                 pos.z = -300
             end
             self:set_pos(pos)
-            base_map.CMD.character_enter(self:get_aoi_obj())
+            base_map.CMD.role_enter(self:get_aoi_obj())
         end
     end
 

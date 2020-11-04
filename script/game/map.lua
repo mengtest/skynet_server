@@ -41,7 +41,7 @@ end
 -- 角色移动
 function CMD.moveto(aoi_obj)
     -- TODO 这边应该检查pos的合法性
-    CMD.character_enter(aoi_obj)
+    CMD.role_enter(aoi_obj)
     return true, aoi_obj.movement.pos
 end
 

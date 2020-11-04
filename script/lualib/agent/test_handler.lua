@@ -1,19 +1,19 @@
-local handler = require "agent.handler"
+local base_handler = require "agent.base_handler"
 local log = require "base.syslog"
 
 local user
 local REQUEST = {}
 local CMD = {}
 
-local _handler = handler.new(REQUEST, CMD)
+local handler = base_handler.new(REQUEST, CMD)
 
-_handler:init(
+handler:init(
     function(u)
         user = u
     end
 )
 
-_handler:release(
+handler:release(
     function()
         user = nil
     end
@@ -38,4 +38,4 @@ function CMD.test(...)
     print(...)
 end
 
-return _handler
+return handler

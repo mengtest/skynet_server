@@ -1,8 +1,8 @@
 local skynet = require "skynet"
-local db_table_config = require "service_config.db_table_config"
+local db_tbl_config = require "db.db_tbl_config"
 local mysql_conf = require "service_config.mysql_conf"
 local tbl_account = require "db.tbl_account"
-local tbl_character = require "db.tbl_character"
+local tbl_role = require "db.tbl_role"
 local log = require "syslog"
 
 local CMD = {}
@@ -250,7 +250,7 @@ end
 
 -- 加user类型表单行数据到redis
 function CMD.load_user_single(tbname, uid)
-    local config = db_table_config[tbname]
+    local config = db_tbl_config[tbname]
     local data = CMD.load_data_impl(config, uid)
     assert(#data <= 1)
     if #data == 1 then
@@ -262,7 +262,7 @@ end
 
 -- 加user类型表多行数据到redis
 function CMD.load_user_multi(tbname, uid)
-    local config = db_table_config[tbname]
+    local config = db_tbl_config[tbname]
     local data = {}
     local t = CMD.load_data_impl(config, uid)
 
@@ -444,7 +444,7 @@ end
 -- redis中增加一行记录，默认同步到mysql
 -- 表名，列名，立刻同步到数据库，不同步到数据库
 function CMD.insert(tbname, row, immed, nosync)
-    local config = db_table_config[tbname]
+    local config = db_tbl_config[tbname]
     local uid = row.uid
     local key = config.redis_key
 
@@ -502,7 +502,7 @@ end
 -- redis中更新一行记录，并同步到mysql
 -- 表名，列名，不同步到数据库
 function CMD.update(tbname, row, nosync)
-    local config = db_table_config[tbname]
+    local config = db_tbl_config[tbname]
     local uid = row.uid
     local key = config.redis_key
 
@@ -560,7 +560,7 @@ end
 local function module_init(name, mod)
     MODULE[name] = mod
     mod.init(CMD)
-    CMD.load_data_impl(db_table_config[name])
+    CMD.load_data_impl(db_tbl_config[name])
 end
 local system = {}
 
@@ -575,7 +575,7 @@ function system.open()
 
     load_schema_to_redis()
     module_init("tbl_account", tbl_account)
-    module_init("tbl_character", tbl_character)
+    module_init("tbl_role", tbl_role)
 end
 
 function system.close()

@@ -93,25 +93,25 @@ function RESPONSE:login(args)
     )
 end
 
-local function get_character_list(self)
-    log.error("send get_character_list")
-    self:send_request("get_character_list")
+local function get_role_list(self)
+    log.error("send get_role_list")
+    self:send_request("get_role_list")
 end
 
-local function character_create(self)
-    log.error("send character_create")
-    local character_create = {
+local function role_create(self)
+    log.error("send role_create")
+    local role_create = {
         name = self.name,
         job = 1,
         sex = 1
     }
-    self:send_request("character_create", character_create)
+    self:send_request("role_create", role_create)
 end
 
-local function character_pick(self, uuid)
-    log.error("send character_pick :" .. uuid)
+local function role_pick(self, uuid)
+    log.error("send role_pick :" .. uuid)
     self:send_request(
-        "character_pick",
+        "role_pick",
         {
             uuid = uuid
         }
@@ -152,7 +152,7 @@ function RESPONSE:ping(args)
 
     self.index = self.index + 1
     if self.index > 0 then
-        get_character_list(self)
+        get_role_list(self)
         return
     end
     -- 断开连接
@@ -163,38 +163,38 @@ function RESPONSE:ping(args)
     login(self)
 end
 
-function RESPONSE:get_character_list(args)
-    log.error("get_character_list size:" .. table.size(args.character))
-    if (table.size(args.character) < 1) then
-        character_create(self)
+function RESPONSE:get_role_list(args)
+    log.error("get_role_list size:" .. table.size(args.role))
+    if (table.size(args.role) < 1) then
+        role_create(self)
     else
         local uuid = 0
         local bpick = false
-        for k, v in pairs(args.character) do
+        for k, v in pairs(args.role) do
             if v.name == self.name then
                 uuid = k
-                character_pick(self, uuid)
+                role_pick(self, uuid)
                 bpick = true
                 break
             end
         end
         if not bpick then
-            for k, v in pairs(args.character) do
-                log.error("get_character_list size > 1:"..self.name.." "..v.name)
+            for k, v in pairs(args.role) do
+                log.error("get_role_list size > 1:"..self.name.." "..v.name)
             end
             
-            --character_create(self)
+            --role_create(self)
         end
     end
 end
 
-function RESPONSE:character_create(args)
-    log.error("character_create:")
-    get_character_list(self)
+function RESPONSE:role_create(args)
+    log.error("role_create:")
+    get_role_list(self)
 end
 
-function RESPONSE:character_pick(args)
-    log.debug("character_pick ret temp_id: " .. args.temp_id)
+function RESPONSE:role_pick(args)
+    log.debug("role_pick ret temp_id: " .. args.temp_id)
     map_ready(self)
 end
 
@@ -289,12 +289,12 @@ function REQUEST:heartbeat()
     log.error("===heartbeat===")
 end
 
-function REQUEST:character_update(args)
-    -- log.error("character_update:")
+function REQUEST:role_update(args)
+    -- log.error("role_update:")
 end
 
-function REQUEST:character_leave(args)
-    -- log.error("character_leave:")
+function REQUEST:role_leave(args)
+    -- log.error("role_leave:")
 end
 
 function REQUEST:delay_test(args)

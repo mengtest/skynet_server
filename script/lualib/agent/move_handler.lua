@@ -1,42 +1,38 @@
 local skynet = require "skynet"
-local handler = require "agent.handler"
+local base_handler = require "agent.base_handler"
 
 local REQUEST = {}
 local CMD = {}
 
-local _handler = handler.new(REQUEST, CMD)
+local handler = base_handler.new(REQUEST, CMD)
 
-local user
-
-_handler:init(
-    function(u)
-        user = u
-    end
-)
-
-_handler:release(
+handler:init(
     function()
-        user = nil
     end
 )
 
-function REQUEST.moveto(args)
+handler:release(
+    function()
+    end
+)
+
+function REQUEST.moveto(user, args)
     local newpos = args.pos
-    local oldpos = user.character:get_pos()
+    local oldpos = user.role:get_pos()
     for k, v in pairs(oldpos) do
         if not newpos[k] then
             newpos[k] = v
         end
     end
-    user.character:set_pos(newpos)
-    local ok, pos = skynet.call(user.character:get_map_address(), "lua", "moveto", user.character:get_aoi_obj())
+    user.role:set_pos(newpos)
+    local ok, pos = skynet.call(user.role:get_map_address(), "lua", "moveto", user.role:get_aoi_obj())
     if not ok then
         pos = oldpos
-        user.character:set_pos(pos)
+        user.role:set_pos(pos)
     end
     return {
         pos = pos
     }
 end
 
-return _handler
+return handler

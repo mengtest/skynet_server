@@ -5,6 +5,7 @@ local log = require "syslog"
 local CMD = {}
 local agent_pool = {}
 local gated
+local user_count
 
 function CMD.get_agent_address()
     local agent
@@ -16,7 +17,8 @@ function CMD.get_agent_address()
     return agent
 end
 
-function CMD.open(agent_pool_count, gate)
+function CMD.open(agent_pool_count, user_count, gate)
+    user_count = user_count
     gated = gate
     for _ = 1, agent_pool_count do
         table.insert(agent_pool, skynet.newservice("msgagent", gated))

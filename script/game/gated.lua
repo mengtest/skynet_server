@@ -33,7 +33,7 @@ function server.login_handler(uid, region, secret)
         subid = subid
     }
 
-    skynet.call(agent, "lua", "login", uid, subid, secret)
+    skynet.call(agent, "lua", "login", uid, subid, region, secret)
     users[uid] = u
     username_map[username] = u
     msgserver.login(username, secret)
@@ -44,7 +44,7 @@ end
 -- call by self
 function server.auth_handler(username, fd)
     local uid = msgserver.userid(username)
-    skynet.call(users[uid].agent, "lua", "auth", fd) -- 通知agent认证成功，玩家真正处于登录状态了
+    skynet.call(users[uid].agent, "lua", "auth", uid, fd) -- 通知agent认证成功，玩家真正处于登录状态了
 end
 
 -- call by agent
@@ -60,7 +60,7 @@ function server.logout_handler(uid, subid, agent)
         if loginservice == nil then
             loginservice = cluster.proxy("login", "@loginservice")
         end
-        skynet.send(loginservice, "lua", "logout", uid, region)
+        skynet.send(loginservice, "lua", "logout", uid)
     end
 end
 
@@ -73,7 +73,7 @@ function server.kick_handler(uid, subid)
         assert(u.username == username)
         -- NOTICE: logout may call skynet.exit, so you should use pcall.
         log.debug("kick %s ", uid)
-        pcall(skynet.call, u.agent, "lua", "logout")
+        pcall(skynet.call, u.agent, "lua", "logout", uid)
     end
 end
 
@@ -82,7 +82,7 @@ end
 function server.disconnect_handler(username)
     local u = username_map[username]
     if u then
-        skynet.call(u.agent, "lua", "afk")
+        skynet.call(u.agent, "lua", "afk", u.uid)
     end
 end
 
@@ -105,7 +105,7 @@ function server.register_handler(conf)
     skynet.call(map_mgr, "lua", "open")
     
     agent_pool = skynet.uniqueservice("agent_pool")
-    skynet.call(agent_pool, "lua", "open", conf.agent_pool, skynet.self())
+    skynet.call(agent_pool, "lua", "open", conf.agent_pool, conf.user_count, skynet.self())
 
     local instance_mgr = skynet.uniqueservice("instance_mgr")
     skynet.call(instance_mgr, "lua", "open", conf.agent_pool)

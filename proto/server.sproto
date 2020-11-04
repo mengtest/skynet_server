@@ -4,24 +4,24 @@
 	ud 2 : string
 }
 
-.character_pos{
+.role_pos{
 	x 0 : integer
 	y 1 : integer
 	z 2 : integer
 }
 
-.character_info{
+.role_info{
 	name 0 : string
 	temp_id 1 : integer
 	job 2 : integer
 	sex 3 : integer
 	level 4 : integer
-	pos 5 : character_pos
+	pos 5 : role_pos
 }
 
-.character_move{
+.role_move{
 	temp_id 0 : integer
-	pos 1 : character_pos
+	pos 1 : role_pos
 }
 
 heartbeat 1 {}
@@ -35,13 +35,13 @@ subid 2 {
 	}
 }
 
-character_update 3 {
+role_update 3 {
 	request {
-		info 0 : character_info
+		info 0 : role_info
 	}
 }
 
-character_leave 4 {
+role_leave 4 {
 	request {
 		temp_id 0 : *integer
 	}
@@ -64,6 +64,6 @@ delay_result 6{
 
 moveto 7{
 	request {
-		move 0 : *character_move
+		move 0 : *role_move
 	}
 }
