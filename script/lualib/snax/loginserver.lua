@@ -186,7 +186,7 @@ local function accept(conf, s, fd, addr)
                     result = "406 Not Acceptable"
                 }
             )
-            error(string.format("uid %s on region %s is already login", uid, region))
+            error(string.format("uid %s on region %d is already login", uid, region))
         end
 
         user_login[uid] = true

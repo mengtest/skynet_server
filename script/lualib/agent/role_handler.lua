@@ -43,8 +43,8 @@ end
 function REQUEST.get_role_list(user)
     local role = load_role_list(user)
     user.role_list = {}
-    for k, _ in pairs(role) do
-        user.role_list[k] = true
+    for k, v in pairs(role) do
+        user.role_list[v.uuid] = true
     end
     
     return {
@@ -123,31 +123,32 @@ end
 
 -- 选择角色
 function REQUEST.role_pick(user, args)
+    local ret = false
     if user.role_list[args.uuid] == nil then
         log.debug("%s pick role failed!", user.uid)
-        return
+        return {ok = ret}
     end
-    local ret = false
+
     local list = skynet.call(db_mgr, "lua", "tbl_role", "load", user.uid, args.uuid)
     if list.uuid then
         log.debug("%s pick role[%s] succ!", user.uid, list.name)
         user.role_list = nil
         init_user_data(user, list)
-        local map_address = skynet.call(map_mgr, "lua", "get_map_address_by_id", user.role:get_map_id())
-        local temp_id
-        if map_address ~= nil then
-            temp_id = skynet.call(map_address, "lua", "get_temp_id")
-            if temp_id > 0 then
-                user.role:set_aoi_mode("w")
-                user.role:set_map_address(map_address)
-                user.role:set_temp_id(temp_id)
-                log.debug("enter map and set temp_id:" .. user.role:get_temp_id())
-            else
-                log.debug("role enter map failed:" .. user.role:get_map_id())
-            end
-        else
-            log.debug("role get map address failed:" .. user.role:get_map_id())
-        end
+        --local map_address = skynet.call(map_mgr, "lua", "get_map_address_by_id", user.role:get_map_id())
+        --local temp_id
+        --if map_address ~= nil then
+        --    temp_id = skynet.call(map_address, "lua", "get_temp_id")
+        --    if temp_id > 0 then
+        --        user.role:set_aoi_mode("w")
+        --        user.role:set_map_address(map_address)
+        --        user.role:set_temp_id(temp_id)
+        --        log.debug("enter map and set temp_id:" .. user.role:get_temp_id())
+        --    else
+        --        log.debug("role enter map failed:" .. user.role:get_map_id())
+        --    end
+        --else
+        --    log.debug("role get map address failed:" .. user.role:get_map_id())
+        --end
         return {
             ok = ret,
             temp_id = temp_id

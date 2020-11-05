@@ -15,47 +15,35 @@ local servername = {
 }
 
 -- DB表结构
--- schema[tablename] = { "pk","fields" = {fieldname = valuetype}}
+-- schema[tablename] = { "primary_keys","fields" = {fieldname = valuetype}}
 local schema = {}
 
 local dbname = mysql_conf.center.database
 
--- 向redis发送cmd请求
--- 这里的uid主要用于在redis中选择redis server
-local function do_redis(args, uid)
-    local cmd = assert(args[1])
-    args[1] = uid
-    return skynet.call(service["redis_pool"], "lua", cmd, table.unpack(args))
-end
-
 -- 获取table的主键
-local function get_primary_key(tbname)
+local function get_primary_keys(tbname)
     local sql = {
         "select k.column_name ",
         "from information_schema.table_constraints t ",
         "join information_schema.key_column_usage k ",
         "using (constraint_name,table_schema,table_name) ",
         "where t.constraint_type = 'PRIMARY KEY' ",
-        "and t.table_schema= '",
-        dbname,
-        "'",
-        "and t.table_name = '",
-        tbname,
-        "'"
+        "and t.table_schema= '", dbname,  "'",
+        "and t.table_name = '", tbname, "'"
     }
 
     local t = skynet.call(service["mysql_pool"], "lua", "execute", table.concat(sql))
-    return t[1]["column_name"]
+    local primary_keys = {}
+    for k,v in pairs(t) do
+        primary_keys[#primary_keys + 1] = v["column_name"]
+    end
+    
+    return primary_keys
 end
 
 -- 获取table中所有的字段
 local function get_fields(tbname)
-    local sql =
-        string.format(
-        "select column_name from information_schema.columns where table_schema = '%s' and table_name = '%s'",
-        dbname,
-        tbname
-    )
+    local sql = string.format("select column_name from information_schema.columns where table_schema = '%s' and table_name = '%s'", dbname, tbname)
     local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
     local fields = {}
     for _, row in pairs(rs) do
@@ -63,7 +51,7 @@ local function get_fields(tbname)
         if name == nil then
             name = row["COLUMN_NAME"]
         end
-        table.insert(fields, name)
+        fields[#fields + 1] = name
     end
 
     return fields
@@ -71,13 +59,7 @@ end
 
 -- 获取字段的变量类型
 local function get_field_type(tbname, field)
-    local sql =
-        string.format(
-        "select data_type from information_schema.columns where table_schema='%s' and table_name='%s' and column_name='%s'",
-        dbname,
-        tbname,
-        field
-    )
+    local sql = string.format("select data_type from information_schema.columns where table_schema='%s' and table_name='%s' and column_name='%s'", dbname, tbname, field)
     local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
     return rs[1]["data_type"] or rs[1]["DATA_TYPE"]
 end
@@ -94,7 +76,7 @@ local function load_schema_to_redis()
 
         local schema_table = {}
         schema_table.fields = {}
-        schema_table.pk = get_primary_key(tbname)
+        schema_table.primary_keys = get_primary_keys(tbname)
 
         local fields = get_fields(tbname)
         for _, field in pairs(fields) do
@@ -122,18 +104,76 @@ local function convert_record(tbname, record)
 end
 
 -- 将table row中的值，根据key的名称提取出来后组合成redis_key
-local function make_redis_key(row, key)
-    local redis_key = ""
-    local fields = string.split(key, ",")
-    for i, field in pairs(fields) do
-        if i == 1 then
-            redis_key = row[field]
-        else
-            redis_key = redis_key .. ":" .. row[field]
-        end
+local function make_redis_key(tbname, row)
+    local t = {}
+    t[#t + 1] = tbname
+    t[#t + 1] = ':'
+    
+    for k,v in pairs(schema[tbname]["primary_keys"]) do
+        t[#t + 1] = row[v]
+        t[#t + 1] = ':'
     end
+    t[#t] = nil
 
-    return redis_key
+    return table.concat(t)
+end
+
+-- 将table row中的值，根据key的名称提取出来后组合成redis_key
+local function make_index_key(tbname, key, row)
+    local t = {}
+    t[#t + 1] = tbname
+    t[#t + 1] = ':'
+    
+    for k,v in pairs(key) do
+        t[#t + 1] = row[v]
+        t[#t + 1] = ':'
+    end
+    t[#t] = nil
+
+    return table.concat(t)
+end
+
+-- 将table row中的值，根据key的名称提取出来后组合成redis_key
+local function make_redis_key_from_where(tbname, where)
+    local t = {}
+    t[#t + 1] = tbname
+    t[#t + 1] = ':'
+    for k,v in pairs(where) do
+        t[#t + 1] = v
+        t[#t + 1] = ':'
+    end
+    t[#t] = nil
+
+    return table.concat(t)
+end
+
+-- 拼接排序串
+local function get_order(primary_keys, order)
+    local t = {}
+    for k,v in pairs(primary_keys) do
+        t[#t + 1] = v
+        t[#t + 1] = order
+        t[#t + 1] = ','
+    end
+    t[#t] = nil
+
+    return table.concat(t, ' ')
+end
+
+-- 拼接条件串
+local function get_primary_key_where(tbname, where)
+    local t = {}
+    for k,v in pairs(schema[tbname]["primary_keys"]) do
+        t[#t + 1] = v
+        t[#t + 1] = '='
+        t[#t + 1] = "'"
+        t[#t + 1] = where[k]
+        t[#t + 1] = "'"
+        t[#t + 1] = " and "
+    end
+    t[#t] = nil
+
+    return table.concat(t)
 end
 
 -- 通过fields提供的k将t中的数据格式化
@@ -155,88 +195,61 @@ local function make_pairs_table(t, fields)
     return data
 end
 
+-- 向redis发送cmd请求
+-- 这里的uid主要用于在redis中选择redis server
+local function do_redis(args)
+    local cmd = assert(args[1])
+    args[1] = args[2]
+    return skynet.call(service["redis_pool"], "lua", cmd, table.unpack(args))
+end
+
 -- 在mysql中根据config指定的信息读取数据，并写入到redis
 -- 如果有uid，那么只读该玩家的信息并写入redis
 -- 返回的data为table，为结果集
 -- 集合中table中值的类型和数据库中的类型相符
-function CMD.load_data_impl(config, uid)
+function CMD.load_data_impl(config, where)
     local tbname = config.tbname
-    local pk = schema[tbname]["pk"]
+    local primary_keys = schema[tbname]["primary_keys"]
+    local order = get_order(primary_keys, "asc")
     local offset = 0
     local sql
     local data = {}
     while true do
-        if not uid then
+        if not where then
             if not config.columns then
-                sql = string.format("select * from %s order by %s asc limit %d, 1000", tbname, pk, offset)
+                sql = string.format("select * from %s order by %s limit %d, 1000", tbname, order, offset)
             else
-                sql =
-                    string.format(
-                    "select %s from %s order by %s asc limit %d, 1000",
-                    config.columns,
-                    tbname,
-                    pk,
-                    offset
-                )
+                sql = string.format("select %s from %s order by %s limit %d, 1000", config.columns, tbname, order, offset)
             end
         else
+            local primary_key_where = get_primary_key_where(tbname, where)
             if not config.columns then
-                sql =
-                    string.format(
-                    "select * from %s where uid = '%s' order by %s asc limit %d, 1000",
-                    tbname,
-                    uid,
-                    pk,
-                    offset
-                )
+                sql = string.format( "select * from %s where %s order by %s limit %d, 1000", tbname, primary_key_where, order, offset)
             else
-                sql =
-                    string.format(
-                    "select %s from %s where uid = '%s' order by %s asc limit %d, 1000",
-                    config.columns,
-                    tbname,
-                    uid,
-                    pk,
-                    offset
-                )
+                sql = string.format( "select %s from %s where %s order by %s limit %d, 1000", config.columns, tbname, primary_key_where, order, offset)
             end
         end
-
+        
         local rs = skynet.call(service["mysql_pool"], "lua", "execute", sql)
         if #rs <= 0 then
             break
         end
         for _, row in pairs(rs) do
             -- 将mysql中读取到的信息添加到redis的哈希表中
-            local redis_key = make_redis_key(row, config.redis_key)
-            do_redis(
-                {
-                    "hmset",
-                    tbname .. ":" .. redis_key,
-                    row
-                },
-                uid
-            )
+            local redis_key = make_redis_key(tbname, row)
+            do_redis({ "hmset", redis_key, row })
 
             -- 对需要排序的数据插入有序集合
             if config.index_key then
-                local index_key = make_redis_key(row, config.index_key)
+                local index_key = make_index_key(tbname, config.index_key, row)
                 local index_value = 0
                 if config.index_value then
                     index_value = row[config.index_value]
                 end
-                do_redis(
-                    {
-                        "zadd",
-                        tbname .. ":index:" .. index_key,
-                        index_value,
-                        redis_key
-                    },
-                    uid
-                )
+                do_redis({ "zadd", index_key, index_value, redis_key })
             end
 
-            table.insert(data, row)
+            data[#data + 1] = row
         end
 
         if #rs < 1000 then
@@ -249,9 +262,9 @@ function CMD.load_data_impl(config, uid)
 end
 
 -- 加user类型表单行数据到redis
-function CMD.load_user_single(tbname, uid)
+function CMD.load_user_single(tbname, where)
     local config = db_tbl_config[tbname]
-    local data = CMD.load_data_impl(config, uid)
+    local data = CMD.load_data_impl(config, where)
     assert(#data <= 1)
     if #data == 1 then
         return data[1]
@@ -261,14 +274,14 @@ function CMD.load_user_single(tbname, uid)
 end
 
 -- 加user类型表多行数据到redis
-function CMD.load_user_multi(tbname, uid)
+function CMD.load_user_multi(tbname, where)
     local config = db_tbl_config[tbname]
     local data = {}
-    local t = CMD.load_data_impl(config, uid)
+    local t = CMD.load_data_impl(config, where)
 
-    local pk = schema[tbname]["pk"]
+    local primary_keys = schema[tbname]["primary_keys"]
     for _, v in pairs(t) do
-        data[v[pk]] = v
+        data[v[primary_keys]] = v
     end
 
     return data
@@ -278,36 +291,21 @@ end
 -- 在mysql中查询的时候，如果查到了，会同步到redis中去的
 -- redis和mysql中都没有找到的时候返回空的table
 -- 单条查询
-function CMD.execute_single(tbname, uid, fields)
+function CMD.execute_single(tbname, where, fields)
     local result
-    local redis_key = tbname .. ":" .. uid
+    local redis_key = make_redis_key_from_where(tbname, where)
     if fields then
-        result =
-            do_redis(
-            {
-                "hmget",
-                redis_key,
-                table.unpack(fields)
-            },
-            uid
-        )
+        result = do_redis({"hmget", redis_key, table.unpack(fields)})
         result = make_pairs_table(result, fields)
     else
-        result =
-            do_redis(
-            {
-                "hgetall",
-                redis_key
-            },
-            uid
-        )
+        result = do_redis({ "hgetall",redis_key})
         result = make_pairs_table(result)
     end
 
     -- redis没有数据返回，则从mysql加载
     if table.empty(result) then
-        log.debug("load data from mysql:" .. uid)
-        local t = CMD.load_user_single(tbname, uid)
+        log.debug("load data from mysql: " .. redis_key)
+        local t = CMD.load_user_single(tbname, where)
         if fields and not table.empty(t) then
             result = {}
             for _, v in pairs(fields) do
@@ -327,44 +325,19 @@ end
 -- 在mysql中查询的时候，如果查到了，会同步到redis中去的
 -- redis和mysql中都没有找到的时候返回空的table
 -- 多条查询,当有id的时候，只提取多条中的一条
-function CMD.execute_multi(tbname, uid, id, fields)
+function CMD.execute_multi(tbname, where, id, fields)
     local result
-    local redis_key = tbname .. ":index:" .. uid
-    local ids =
-        do_redis(
-        {
-            "zrange",
-            redis_key,
-            0,
-            -1
-        },
-        uid
-    )
-
+    local redis_key = make_redis_key_from_where(tbname, where)
+    local ids = do_redis({"zrange", redis_key, 0, -1})
     if not table.empty(ids) then
         if id then
             -- 获取一条数据
             if fields then
-                result =
-                    do_redis(
-                    {
-                        "hmget",
-                        tbname .. ":" .. id,
-                        table.unpack(fields)
-                    },
-                    uid
-                )
+                result = do_redis({"hmget", tbname .. ":" .. id, table.unpack(fields)})
                 result = make_pairs_table(result, fields)
                 result = convert_record(tbname, result)
             else
-                result =
-                    do_redis(
-                    {
-                        "hgetall",
-                        tbname .. ":" .. id
-                    },
-                    uid
-                )
+                result = do_redis({"hgetall", tbname .. ":" .. id})
                 result = make_pairs_table(result)
                 result = convert_record(tbname, result)
             end
@@ -373,38 +346,23 @@ function CMD.execute_multi(tbname, uid, id, fields)
             result = {}
             if fields then
                 for _, _id in pairs(ids) do
-                    local t =
-                        do_redis(
-                        {
-                            "hmget",
-                            tbname .. ":" .. _id,
-                            table.unpack(fields)
-                        },
-                        uid
-                    )
+                    local t = do_redis({"hmget", _id, table.unpack(fields)})
                     t = make_pairs_table(t, fields)
                     t = convert_record(tbname, t)
-                    result[tonumber(_id)] = t
+                    result[#result + 1] = t
                 end
             else
                 for _, _id in pairs(ids) do
-                    local t =
-                        do_redis(
-                        {
-                            "hgetall",
-                            tbname .. ":" .. _id
-                        },
-                        uid
-                    )
+                    local t = do_redis({"hgetall", _id})
                     t = make_pairs_table(t)
                     t = convert_record(tbname, t)
-                    result[tonumber(_id)] = t
+                    result[#result + 1] = t
                 end
             end
         end
     else
         -- mysql查询
-        local t = CMD.load_user_multi(tbname, uid)
+        local t = CMD.load_user_multi(tbname, where)
 
         if id then
             if fields then
@@ -445,113 +403,73 @@ end
 -- 表名，列名，立刻同步到数据库，不同步到数据库
 function CMD.insert(tbname, row, immed, nosync)
     local config = db_tbl_config[tbname]
-    local uid = row.uid
-    local key = config.redis_key
-
-    local redis_key = make_redis_key(row, key)
-    do_redis(
-        {
-            "hmset",
-            tbname .. ":" .. redis_key,
-            row
-        },
-        uid
-    )
+    local redis_key = make_redis_key(tbname, row)
+    do_redis({"hmset", redis_key, row})
     if config.index_key then
-        local linkey = make_redis_key(row, config.index_key)
+        local index_key = make_index_key(tbname, config.index_key, row)
         local index_value = 0
         if config.index_value then
             index_value = row[config.index_value]
         end
-        do_redis(
-            {
-                "zadd",
-                tbname .. ":index:" .. linkey,
-                index_value,
-                redis_key
-            },
-            uid
-        )
+        do_redis({"zadd", index_key, index_value, redis_key})
     end
 
     if not nosync then
         local sql = {}
-        table.insert(sql, "insert into ")
-        table.insert(sql, tbname)
-        table.insert(sql, "(")
+        sql[#sql + 1] = "insert into "
+        sql[#sql + 1] = tbname
+        sql[#sql + 1] = "("
         for k, v in pairs(row) do
-            table.insert(sql, k)
-            table.insert(sql, ",")
+            sql[#sql + 1] = k
+            sql[#sql + 1] = ","
         end
         sql[#sql] = nil
-        table.insert(sql, ") values(")
+        sql[#sql + 1] = ") values("
         for i = 4, #sql, 2 do
-            table.insert(sql, "'")
-            table.insert(sql, row[sql[i]])
-            table.insert(sql, "'")
-            table.insert(sql, ",")
+            sql[#sql + 1] = "'"
+            sql[#sql + 1] = row[sql[i]]
+            sql[#sql + 1] = "'"
+            sql[#sql + 1] = ","
         end
         sql[#sql] = nil
-        table.insert(sql, ")")
+        sql[#sql + 1] = ")"
 
         return skynet.call(service["db_sync"], "lua", "sync", table.concat(sql), immed)
     end
     return true
 end
 
--- redis中更新一行记录，并同步到mysql
--- 表名，列名，不同步到数据库
-function CMD.update(tbname, row, nosync)
+-- 表名，条件，列名，不同步到数据库
+function CMD.update(tbname, where, row, nosync)
     local config = db_tbl_config[tbname]
-    local uid = row.uid
-    local key = config.redis_key
-
-    local redis_key = make_redis_key(row, key)
-    do_redis(
-        {
-            "hmset",
-            tbname .. ":" .. redis_key,
-            row
-        },
-        uid
-    )
+    local redis_key = make_redis_key_from_where(tbname, where)
+    do_redis({"hmset", redis_key, row})
     if config.index_key then
-        local linkey = make_redis_key(row, config.index_key)
+        local index_key = make_redis_key_from_where(tbname, where)
         local index_value = 0
         if config.index_value then
             index_value = row[config.index_value]
         end
-        do_redis(
-            {
-                "zadd",
-                tbname .. ":index:" .. linkey,
-                index_value,
-                redis_key
-            },
-            uid
-        )
+        do_redis({"zadd", index_key, index_value, redis_key})
     end
 
     if not nosync then
-        local pk = schema[tbname]["pk"]
+        local primary_keys = schema[tbname]["primary_keys"]
         local sql = {}
-        table.insert(sql, "update ")
-        table.insert(sql, tbname)
-        table.insert(sql, " set ")
+        sql[#sql + 1] = "update "
+        sql[#sql + 1] = tbname
+        sql[#sql + 1] = " set "
 
         for k, v in pairs(row) do
-            table.insert(sql, k)
-            table.insert(sql, "='")
-            table.insert(sql, v)
-            table.insert(sql, "',")
+            sql[#sql + 1] = k
+            sql[#sql + 1] = "='"
+            sql[#sql + 1] = v
+            sql[#sql + 1] = "',"
         end
         sql[#sql] = "'"
 
-        table.insert(sql, " where ")
-        table.insert(sql, pk)
-        table.insert(sql, "='")
-        table.insert(sql, row[pk])
-        table.insert(sql, "'")
+        sql[#sql + 1] = " where "
+        sql[#sql + 1] = get_primary_key_where(tbname, where)
         
         skynet.call(service["db_sync"], "lua", "sync", table.concat(sql))
     end

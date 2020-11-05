@@ -15,13 +15,13 @@ function tbl_role.get_list(uid)
         "level",
         "sex"
     }
-    local list = db_mgr_cmd.execute_multi("tbl_role", uid, nil, row)
+    local list = db_mgr_cmd.execute_multi("tbl_role", {uid}, nil, row)
     return list
 end
 
 -- 加载角色信息
 function tbl_role.load(uid, uuid)
-    local list = db_mgr_cmd.execute_multi("tbl_role", uid, uuid, nil)
+    local list = db_mgr_cmd.execute_multi("tbl_role", {uid}, uuid, nil)
     return list
 end
 

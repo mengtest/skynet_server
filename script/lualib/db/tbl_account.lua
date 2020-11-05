@@ -13,19 +13,13 @@ end
 function tbl_account.auth(account, region, password)
     log.debug("auth:[%s]\t[%s]\t[%s]", account, region, password)
     local uid
-    local result = db_mgr_cmd.execute_multi("tbl_account", account)
-    if result and not table.empty(result) then
-        for k, v in pairs(result) do
-            if v.region == region and v.account == account then
-                uid = k
-                local row = {}
-                row.uid = k
-                row.login_time = os.date("%Y-%m-%d %H:%M:%S")
-                db_mgr_cmd.update("tbl_account", row)
-                log.debug("tbl_account:%s update login time", account)
-                break
-            end
-        end
+    local result = db_mgr_cmd.execute_single("tbl_account", {account, region})
+    if result and result.region == region and result.account == account then
+        uid = result.uid
+        local row = {}
+        row.login_time = os.date("%Y-%m-%d %H:%M:%S")
+        db_mgr_cmd.update("tbl_account", {account, region}, row)
+        log.debug("tbl_account:%s update login time", account)
     end
     
     if not uid then
