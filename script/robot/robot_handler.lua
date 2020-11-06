@@ -39,8 +39,8 @@ end
 
 local function encode_token(token)
     return string.format(
-        "%s@%s$%s:%s",
-        token.user,
+        "%s@%s$%s:%d",
+        token.account,
         token.server,
         token.pass,
         token.region
@@ -66,10 +66,11 @@ local function login(self)
     --if true then return end
     local username =
         string.format(
-        "%s@%s#%s",
-        self.token.uid,
+        "%s@%s#%s:%d",
+        self.account,
         self.token.server,
-        self.subid
+        self.subid,
+        self.token.region
     )
     local hmac = crypt.hmac64(crypt.hashkey(username..":"..self.index), self.secret)
     self:send_request(
@@ -281,7 +282,6 @@ function REQUEST:subid(args)
     --log.error("login ok, subid=" .. self.subid)
     self.gate_ip = args.gate_ip
     self.gate_port = args.gate_port
-    self.token.uid = args.uid
     login(self)
 end
 

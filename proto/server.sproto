@@ -29,9 +29,8 @@ heartbeat 1 {}
 subid 2 {
 	request {
 		result 0 : string # "200 subid"
-		uid 1 : string
-		gate_ip 2: string
-		gate_port 3: integer
+		gate_ip 1: string
+		gate_port 2: integer
 	}
 }
 

@@ -120,9 +120,9 @@ local function launch_slave(auth_handler)
             token = crypt.desdecode(secret, args.etokens)
         end
 
-        local ok, server, uid, region = pcall(auth_handler, token)
+        local ok, server, account, region = pcall(auth_handler, token)
 
-        return ok, server, uid, secret, region 
+        return ok, server, account, secret, region 
     end
 
     local function ret_pack(ok, err, ...)
@@ -161,7 +161,7 @@ end
 local user_login = {}
 
 local function accept(conf, s, fd, addr)
-    local ok, server, uid, secret, region = skynet.call(s, "lua", fd, addr)
+    local ok, server, account, secret, region = skynet.call(s, "lua", fd, addr)
     if not ok then
         if ok ~= nil then
             send_request(
@@ -176,8 +176,9 @@ local function accept(conf, s, fd, addr)
         error(server)
     end
 
+    local account_name = conf.account_name(account, region)
     if not conf.multilogin then
-        if user_login[uid] then
+        if user_login[account_name] then
             send_request(
                 "response 406",
                 fd,
@@ -186,14 +187,14 @@ local function accept(conf, s, fd, addr)
                     result = "406 Not Acceptable"
                 }
             )
-            error(string.format("uid %s on region %d is already login", uid, region))
+            error(string.format("account %s on region %d is already login", account, region))
         end
 
-        user_login[uid] = true
+        user_login[account_name] = true
     end
 
-    local ok, err, _gate_ip, _gate_port = pcall(conf.login_handler, server, region, uid, secret)
-    user_login[uid] = nil
+    local ok, err, _gate_ip, _gate_port = pcall(conf.login_handler, server, account, region, secret)
+    user_login[account_name] = nil
 
     if ok then
         err = err or ""
@@ -203,7 +204,6 @@ local function accept(conf, s, fd, addr)
             "subid",
             {
                 result = "200 " .. err,
-                uid = uid,
                 gate_ip = _gate_ip,
                 gate_port = _gate_port
             }

@@ -15,26 +15,32 @@ local gate_ip
 local gate_port
 local region = 1
 
+function server.account_name(account, region)
+    return string.format("%s@%d", account, region)
+end
+
 -- login server disallow multi login, so login_handler never be reentry
-function server.login_handler(uid, region, secret)
-    if users[uid] then
-        log.warning("%s is already login", uid)
+function server.login_handler(account, region, secret)
+    local account_name = server.account_name(account, region)
+    if users[account_name] then
+        log.warning("%s on %d is already login", account, region)
     end
 
     internal_id = internal_id + 1
     local subid = internal_id -- 不能直接使用internal_id
-    local username = msgserver.username(uid, subid, servername)
+    local username = msgserver.username(account, region, subid, servername)
     local agent = skynet.call(agent_pool, "lua", "get_agent_address")
 
     local u = {
         username = username,
         agent = agent,
-        uid = uid,
+        account = account,
+        region = region,
         subid = subid
     }
 
-    skynet.call(agent, "lua", "login", uid, subid, region, secret)
-    users[uid] = u
+    skynet.call(agent, "lua", "login", account, region, subid, secret)
+    users[account_name] = u
     username_map[username] = u
     msgserver.login(username, secret)
 
@@ -43,37 +49,40 @@ end
 
 -- call by self
 function server.auth_handler(username, fd)
-    local uid = msgserver.userid(username)
-    skynet.call(users[uid].agent, "lua", "auth", uid, fd) -- 通知agent认证成功，玩家真正处于登录状态了
+    local account, region = msgserver.userid(username)
+    local account_name = server.account_name(account, region)
+    skynet.call(users[account_name].agent, "lua", "auth", account_name, fd) -- 通知agent认证成功，玩家真正处于登录状态了
 end
 
 -- call by agent
 -- agent通知玩家下线
-function server.logout_handler(uid, subid, agent)
-    local u = users[uid]
+function server.logout_handler(account, region, subid, agent)
+    local account_name = server.account_name(account, region)
+    local u = users[account_name]
     if u then
-        local username = msgserver.username(uid, subid, servername)
+        local username = msgserver.username(account, region, subid, servername)
         assert(u.username == username)
         msgserver.logout(u.username)
-        users[uid] = nil
+        users[account_name] = nil
         username_map[u.username] = nil
         if loginservice == nil then
             loginservice = cluster.proxy("login", "@loginservice")
         end
-        skynet.send(loginservice, "lua", "logout", uid)
+        skynet.send(loginservice, "lua", "logout", account, region)
     end
 end
 
 -- call by login server
 -- 被login踢下线
-function server.kick_handler(uid, subid)
-    local u = users[uid]
+function server.kick_handler(account, region, subid)
+    local account_name = server.account_name(account, region)
+    local u = users[account_name]
     if u then
-        local username = msgserver.username(uid, subid, servername)
+        local username = msgserver.username(account, region, subid, servername)
         assert(u.username == username)
         -- NOTICE: logout may call skynet.exit, so you should use pcall.
-        log.debug("kick %s ", uid)
-        pcall(skynet.call, u.agent, "lua", "logout", uid)
+        log.debug("kick %s on %d", account, region)
+        pcall(skynet.call, u.agent, "lua", "logout", account_name)
     end
 end
 
@@ -82,7 +91,7 @@ end
 function server.disconnect_handler(username)
     local u = username_map[username]
     if u then
-        skynet.call(u.agent, "lua", "afk", u.uid)
+        skynet.call(u.agent, "lua", "afk", server.account_name(u.account, u.region))
     end
 end
 

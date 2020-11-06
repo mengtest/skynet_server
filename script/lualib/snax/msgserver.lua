@@ -92,14 +92,14 @@ local host
 
 -- 解析username
 function server.userid(username)
-    -- uid@server#subid
-    local uid, servername, subid = username:match "([^@]*)@([^#]*)#(.*)"
-    return tonumber(uid), subid, servername
+    -- account@server#subid
+    local account, servername, subid, region = username:match "([^@]*)@([^#]*)#([^:]*):(.*)"
+    return account, region, subid, servername
 end
 
 -- 合成username
-function server.username(uid, subid, servername)
-    return string.format("%s@%s#%s", uid, servername, tostring(subid))
+function server.username(account, region, subid, servername)
+    return string.format("%s@%s#%s:%d", account, servername, tostring(subid), region)
 end
 
 -- 玩家下线

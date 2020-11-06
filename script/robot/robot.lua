@@ -31,7 +31,8 @@ end
 local function init_method(robot)
     function robot:send_request(name, args)
         self.session_id = self.session_id + 1
-        local str = self.request(name, args, self.session_id, self.token.uid)
+        print(name, args, self.session_id, self.account_name)
+        local str = self.request(name, args, self.session_id, self.account_name)
         local size = #str + 4
         local package = string.pack(">I2", size)..str..string.pack(">I4", self.session_id)
         socket.write(self.fd, package)
@@ -134,6 +135,8 @@ end
 init_method(s_method.__index)
 
 function _robot.create(map_id, server, ip, port, robot_index)
+    local account = "Robot_" .. robot_index
+    local region = 1
     local obj = {
         REQUEST = {},
         RESPONSE = {},
@@ -144,16 +147,17 @@ function _robot.create(map_id, server, ip, port, robot_index)
         gate_ip = nil,
         gate_port = nil,
         fd = nil,
-        account = "Robot_" .. robot_index,
+        account = account,
+        account_name = account.."@"..region,
         name = "Robot_" .. robot_index,
         session = {},
         session_id = 0,
         token = {
             server = server,
-            user = "Robot_" .. robot_index,
+            account = account,
             uid = nil,
             pass = "password",
-            region = 1
+            region = region
         },
         challenge = nil,
         clientkey = nil,

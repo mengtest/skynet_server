@@ -104,42 +104,13 @@ local function convert_record(tbname, record)
 end
 
 -- 将table row中的值，根据key的名称提取出来后组合成redis_key
-local function make_redis_key(tbname, row)
-    local t = {}
-    t[#t + 1] = tbname
-    t[#t + 1] = ':'
-    
-    for k,v in pairs(schema[tbname]["primary_keys"]) do
-        t[#t + 1] = row[v]
-        t[#t + 1] = ':'
-    end
-    t[#t] = nil
-
-    return table.concat(t)
-end
-
--- 将table row中的值，根据key的名称提取出来后组合成redis_key
-local function make_index_key(tbname, key, row)
+local function make_redis_key(tbname, key, row)
     local t = {}
     t[#t + 1] = tbname
     t[#t + 1] = ':'
     
     for k,v in pairs(key) do
         t[#t + 1] = row[v]
-        t[#t + 1] = ':'
-    end
-    t[#t] = nil
-
-    return table.concat(t)
-end
-
--- 将table row中的值，根据key的名称提取出来后组合成redis_key
-local function make_redis_key_from_where(tbname, where)
-    local t = {}
-    t[#t + 1] = tbname
-    t[#t + 1] = ':'
-    for k,v in pairs(where) do
-        t[#t + 1] = v
         t[#t + 1] = ':'
     end
     t[#t] = nil
@@ -167,7 +138,7 @@ local function get_primary_key_where(tbname, where)
         t[#t + 1] = v
         t[#t + 1] = '='
         t[#t + 1] = "'"
-        t[#t + 1] = where[k]
+        t[#t + 1] = where[v]
         t[#t + 1] = "'"
         t[#t + 1] = " and "
     end
@@ -236,12 +207,12 @@ function CMD.load_data_impl(config, where)
         end
         for _, row in pairs(rs) do
             -- 将mysql中读取到的信息添加到redis的哈希表中
-            local redis_key = make_redis_key(tbname, row)
+            local redis_key = make_redis_key(tbname, config.redis_key, row)
             do_redis({ "hmset", redis_key, row })
 
             -- 对需要排序的数据插入有序集合
             if config.index_key then
-                local index_key = make_index_key(tbname, config.index_key, row)
+                local index_key = make_redis_key(tbname, config.index_key, row)
                 local index_value = 0
                 if config.index_value then
                     index_value = row[config.index_value]
@@ -293,7 +264,8 @@ end
 -- 单条查询
 function CMD.execute_single(tbname, where, fields)
     local result
-    local redis_key = make_redis_key_from_where(tbname, where)
+    local config = db_tbl_config[tbname]
+    local redis_key = make_redis_key(tbname, config.redis_key, where)
     if fields then
         result = do_redis({"hmget", redis_key, table.unpack(fields)})
         result = make_pairs_table(result, fields)
@@ -327,8 +299,9 @@ end
 -- 多条查询,当有id的时候，只提取多条中的一条
 function CMD.execute_multi(tbname, where, id, fields)
     local result
-    local redis_key = make_redis_key_from_where(tbname, where)
-    local ids = do_redis({"zrange", redis_key, 0, -1})
+    local config = db_tbl_config[tbname]
+    local index_key = make_redis_key(tbname, config.index_key, where)
+    local ids = do_redis({"zrange", index_key, 0, -1})
     if not table.empty(ids) then
         if id then
             -- 获取一条数据
@@ -403,10 +376,10 @@ end
 -- 表名，列名，立刻同步到数据库，不同步到数据库
 function CMD.insert(tbname, row, immed, nosync)
     local config = db_tbl_config[tbname]
-    local redis_key = make_redis_key(tbname, row)
+    local redis_key = make_redis_key(tbname, config.redis_key, row)
     do_redis({"hmset", redis_key, row})
     if config.index_key then
-        local index_key = make_index_key(tbname, config.index_key, row)
+        local index_key = make_redis_key(tbname, config.index_key, row)
         local index_value = 0
         if config.index_value then
             index_value = row[config.index_value]
@@ -442,10 +415,10 @@ end
 -- 表名，条件，列名，不同步到数据库
 function CMD.update(tbname, where, row, nosync)
     local config = db_tbl_config[tbname]
-    local redis_key = make_redis_key_from_where(tbname, where)
+    local redis_key = make_redis_key(tbname, config.redis_key, where)
     do_redis({"hmset", redis_key, row})
     if config.index_key then
-        local index_key = make_redis_key_from_where(tbname, where)
+        local index_key = make_redis_key(tbname, config.index_key, where)
         local index_value = 0
         if config.index_value then
             index_value = row[config.index_value]

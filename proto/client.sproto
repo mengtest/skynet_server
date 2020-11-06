@@ -73,7 +73,7 @@ auth 4 {
 #登录game
 login 5 {
 	request {
-		username 0 : string # uid@server#subid
+		username 0 : string # account@server#subid:region
 		index 1 : integer
 		hmac 2 : string # crypt.hmac64(crypt.hashkey(username:index), secret)
 	}

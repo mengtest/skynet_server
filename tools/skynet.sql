@@ -3,7 +3,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 -- 账号表
 CREATE TABLE IF NOT EXISTS `tbl_account` (
-  `uid` bigint(64) NOT NULL COMMENT '用户id',
   `account` varchar(64) NOT NULL COMMENT '账号',
   `region` int(16) NOT NULL COMMENT '大区',
   `create_time` DATETIME NOT NULL COMMENT '创建时间',
@@ -13,8 +12,9 @@ CREATE TABLE IF NOT EXISTS `tbl_account` (
 
 -- 角色表
 CREATE TABLE IF NOT EXISTS `tbl_role` (
-  `uid` bigint(64) NOT NULL COMMENT '用户id',
   `uuid` bigint(64)  unsigned NOT NULL COMMENT '唯一id',
+  `account` varchar(64) NOT NULL COMMENT '账号',
+  `region` int(16) NOT NULL COMMENT '大区',
   `name` varchar(64) NOT NULL COMMENT '角色名称',
   `sex` tinyint(1) unsigned NOT NULL COMMENT '性别',
   `job` tinyint(4) unsigned NOT NULL COMMENT '职业',

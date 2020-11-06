@@ -6,7 +6,7 @@ function tbl_role.init(cmd)
 end
 
 -- agent请求角色列表
-function tbl_role.get_list(uid)
+function tbl_role.get_list(account, region)
     local row = {
         "uuid",
         "name",
@@ -15,13 +15,13 @@ function tbl_role.get_list(uid)
         "level",
         "sex"
     }
-    local list = db_mgr_cmd.execute_multi("tbl_role", {uid}, nil, row)
+    local list = db_mgr_cmd.execute_multi("tbl_role", {account = account, region = region}, nil, row)
     return list
 end
 
 -- 加载角色信息
-function tbl_role.load(uid, uuid)
-    local list = db_mgr_cmd.execute_multi("tbl_role", {uid}, uuid, nil)
+function tbl_role.load(uuid)
+    local list = db_mgr_cmd.execute_single("tbl_role", {uuid = uuid}, nil)
     return list
 end
 

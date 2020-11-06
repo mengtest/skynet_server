@@ -3,11 +3,12 @@ local base_obj = require "obj.base_obj"
 
 local user = class("user", base_obj)
 
-function user:initialize(uid, region, subid, secret)
-    self.uid = uid
+function user:initialize(account, region, subid, secret, account_name)
+    self.account = account
     self.region = region
     self.subid = subid
     self.secret = secret
+    self.account_name = account_name
 end
 
 function user:afk()

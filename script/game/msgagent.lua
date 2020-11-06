@@ -12,9 +12,14 @@ local users = {}
 local host
 local db_mgr
 
-function CMD.login(source, uid, region, subid, secret)
-    log.notice("%s is login", uid)
-    users[uid] = user:new(uid, region, subid, secret)
+local function account_name(account, region)
+    return string.format("%s@%d", account, region)
+end
+
+function CMD.login(source, account, region, subid, secret)
+    log.notice("%s on %d is login", account, region)
+    local account_name = account_name(account, region)
+    users[account_name] = user:new(account, region, subid, secret, account_name)
 end
 
 function CMD.auth(source, user, fd)
@@ -42,7 +47,7 @@ local traceback = debug.traceback
 local function handle_request(name, args, response, ud)
     local f = REQUEST[name]
     if f then
-        local u = users[tonumber(ud)]
+        local u = users[ud]
         if u then
             local ok, ret = xpcall(f, traceback, u, args)
             if not ok then
@@ -53,7 +58,7 @@ local function handle_request(name, args, response, ud)
                 end
             end
         else
-            error("unhandled ud : " .. ud)
+            error("unhandled ud : " .. tostring(ud))
         end
     else
         error("unhandled message : " .. name)
@@ -91,9 +96,9 @@ skynet.start(
     function()
         skynet.dispatch(
             "lua",
-            function(session, source, command, uid, ...)
+            function(session, source, command, account_name, ...)
                 local f = assert(CMD[command], command)
-                local u = users[uid] or uid
+                local u = users[account_name] or account_name
                 skynet.ret(skynet.pack(f(source, u, ...)))
             end
         )

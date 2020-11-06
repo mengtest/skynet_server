@@ -5,13 +5,15 @@ local conf = {}
 -- index_value 用于集合排序的值
 -- columns 数据表字段
 conf["tbl_account"] = {
+    redis_key = {"account","region"},
     index_key = nil,
     index_value = nil,
     columns = nil
 }
 
 conf["tbl_role"] = {
-    index_key = {"uid"},
+    redis_key = {"uuid"},
+    index_key = {"account","region"},
     index_value = nil,
     columns = nil
 }
