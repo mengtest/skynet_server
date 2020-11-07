@@ -152,7 +152,7 @@ function RESPONSE:ping(args)
     log.error("ping:" .. tostring(args.ok))
 
     self.index = self.index + 1
-    if self.index > 0 then
+    if self.index > 3 then
         get_role_list(self)
         return
     end
