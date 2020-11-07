@@ -82,6 +82,7 @@ login 5 {
 	}
 }
 
+#获取角色列表
 get_role_list 6 {
 	response {
 		#(uuid) is optional, means role_overview.uuid is main index.
@@ -89,6 +90,7 @@ get_role_list 6 {
 	}
 }
 
+#请求创建角色
 role_create 7 {
 	request {
 		name 0 : string
@@ -100,6 +102,7 @@ role_create 7 {
 	}
 }
 
+#选择角色
 role_pick 8{
 	request {
 		uuid 0 : integer
@@ -110,12 +113,14 @@ role_pick 8{
 	}
 }
 
+#加载地图完毕
 map_ready 9{
 	response {
 		ok 0 : boolean
 	}
 }
 
+#移动
 moveto 10{
 	request {
 		pos 0 : role_pos
@@ -125,12 +130,14 @@ moveto 10{
 	}
 }
 
+#退出游戏
 quit_game 11{
 	response {
 		ok 0 : boolean
 	}
 }
 
+#切换地图
 change_map 12{
 	request {
 		map_id 0 : integer
@@ -141,6 +148,7 @@ change_map 12{
 	}
 }
 
+#进入副本
 enter_instance 13{
 	request {
 		instance_id 0 : integer

@@ -58,16 +58,10 @@ local function create(account, region, name, job, sex)
         uuid = uuid.gen(),
         account = account,
         region = region,
-        name = name,
-        job = job,
-        sex = sex,
-        level = 1,
         create_time = datetime,
         login_time = datetime,
-        map_id = 1,
-        x = 0,
-        y = 0,
-        z = 0,
+        name = name,
+        sex = sex,
         data = packer.pack({})
     }
 

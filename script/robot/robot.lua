@@ -31,7 +31,6 @@ end
 local function init_method(robot)
     function robot:send_request(name, args)
         self.session_id = self.session_id + 1
-        print(name, args, self.session_id, self.account_name)
         local str = self.request(name, args, self.session_id, self.account_name)
         local size = #str + 4
         local package = string.pack(">I2", size)..str..string.pack(">I4", self.session_id)

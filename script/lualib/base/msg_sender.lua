@@ -14,10 +14,10 @@ local function message_package(name, args)
     return string.pack(">I2", #str + 4)..str..string.pack(">I4", 0)
 end
 
-function msg_sender.boardcast(package, list, obj)
+function msg_sender.boardcast(package, list, role)
     if list == nil then
-        assert(obj)
-        list = obj:get_send_to_client_aoi_list()
+        assert(role)
+        list = role:get_send_to_client_aoi_list()
     end
     assert(type(list) == "table", "boardcast list is not a table")
     for _, v in pairs(list) do
@@ -26,17 +26,17 @@ function msg_sender.boardcast(package, list, obj)
 end
 
 -- 发送请求
-function msg_sender.send_request(name, args, user)
+function msg_sender.send_request(name, args, role)
     assert(name)
     assert(args)
-    socketdriver.send(user.fd, message_package(name, args))
+    socketdriver.send(role.fd, message_package(name, args))
 end
 
 -- 发送广播请求
-function msg_sender.send_board_request(name, args, agent_list, user)
+function msg_sender.send_board_request(name, args, agent_list, role)
     assert(name)
     assert(args)
-    msg_sender.boardcast(message_package(name, args), agent_list, user)
+    msg_sender.boardcast(message_package(name, args), agent_list, role)
 end
 
 function msg_sender.get_host()

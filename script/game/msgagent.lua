@@ -10,7 +10,6 @@ local CMD = {}
 local REQUEST = {}
 local users = {}
 local host
-local db_mgr
 
 local function account_name(account, region)
     return string.format("%s@%d", account, region)
@@ -69,7 +68,6 @@ skynet.init(
     function()
         msg_sender.init()
         host = msg_sender.get_host()
-        db_mgr = cluster.proxy("db", "@db_mgr")
         register_handler:register(REQUEST, CMD)
     end
 )
