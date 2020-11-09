@@ -38,8 +38,8 @@ local function sync_impl()
 end
 
 function CMD.open()
-    skynet.fork(sync_impl)
     mysql_pool = skynet.uniqueservice("mysql_pool")
+    skynet.fork(sync_impl)
 end
 
 function CMD.close()

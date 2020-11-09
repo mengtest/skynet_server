@@ -81,9 +81,15 @@ local function load_schema_to_redis()
         local fields = get_fields(tbname)
         for _, field in pairs(fields) do
             local field_type = get_field_type(tbname, field)
-            if field_type == "char" or field_type == "varchar" or
-             field_type == "tinytext" or field_type == "text" or
-             field_type == "mediumtext" or field_type == "longtext" then
+            if field_type == "tinyint" or
+            field_type == "smallint" or
+            field_type == "mediumint" or
+            field_type == "int" or
+            field_type == "bigint" or
+            field_type == "float"or
+            field_type == "double" or
+            field_type == "decimal" or
+            field_type == "year" then
                 schema_table.fields[field] = true
             end
         end
@@ -95,7 +101,7 @@ end
 local function convert_record(tbname, record)
     local fields = schema[tbname].fields
     for k, v in pairs(record) do
-        if fields[k] ~= true then
+        if fields[k] == true then
             record[k] = tonumber(v)
         end
     end
@@ -110,6 +116,7 @@ local function make_redis_key(tbname, key, row)
     t[#t + 1] = ':'
     
     for k,v in pairs(key) do
+        assert(row[v])
         t[#t + 1] = row[v]
         t[#t + 1] = ':'
     end
@@ -135,6 +142,7 @@ end
 local function get_primary_key_where(tbname, where)
     local t = {}
     for k,v in pairs(schema[tbname]["primary_keys"]) do
+        assert(where[v])
         t[#t + 1] = v
         t[#t + 1] = '='
         t[#t + 1] = "'"
@@ -263,6 +271,7 @@ end
 -- redis和mysql中都没有找到的时候返回空的table
 -- 单条查询
 function CMD.execute_single(tbname, where, fields)
+    assert(where)
     local result
     local config = db_tbl_config[tbname]
     local redis_key = make_redis_key(tbname, config.redis_key, where)
@@ -298,6 +307,7 @@ end
 -- redis和mysql中都没有找到的时候返回空的table
 -- 多条查询,当有id的时候，只提取多条中的一条
 function CMD.execute_multi(tbname, where, id, fields)
+    assert(where)
     local result
     local config = db_tbl_config[tbname]
     local index_key = make_redis_key(tbname, config.index_key, where)
@@ -375,6 +385,7 @@ end
 -- redis中增加一行记录，默认同步到mysql
 -- 表名，列名，立刻同步到数据库，不同步到数据库
 function CMD.insert(tbname, row, immed, nosync)
+    assert(row)
     local config = db_tbl_config[tbname]
     local redis_key = make_redis_key(tbname, config.redis_key, row)
     do_redis({"hmset", redis_key, row})
@@ -409,11 +420,13 @@ function CMD.insert(tbname, row, immed, nosync)
 
         return skynet.call(service["db_sync"], "lua", "sync", table.concat(sql), immed)
     end
+
     return true
 end
 
 -- 表名，条件，列名，不同步到数据库
 function CMD.update(tbname, where, row, nosync)
+    assert(row)
     local config = db_tbl_config[tbname]
     local redis_key = make_redis_key(tbname, config.redis_key, where)
     do_redis({"hmset", redis_key, row})
@@ -446,6 +459,8 @@ function CMD.update(tbname, where, row, nosync)
         
         skynet.call(service["db_sync"], "lua", "sync", table.concat(sql))
     end
+
+    return true
 end
 
 local function module_init(name, mod)
@@ -474,6 +489,12 @@ function system.close()
     for _, v in pairs(servername) do
         skynet.call(service[v], "lua", "close")
     end
+end
+
+function system.test()
+    local test = require "db.test"
+    test.init(CMD)
+    test.start()
 end
 
 MODULE["system"] = system
