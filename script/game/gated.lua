@@ -114,7 +114,7 @@ function server.register_handler(conf)
     skynet.call(map_mgr, "lua", "open")
     
     agent_pool = skynet.uniqueservice("agent_pool")
-    skynet.call(agent_pool, "lua", "open", conf.agent_pool, conf.user_count, skynet.self())
+    skynet.call(agent_pool, "lua", "open", conf.agent_pool, conf.agent_user_count, skynet.self())
 
     local instance_mgr = skynet.uniqueservice("instance_mgr")
     skynet.call(instance_mgr, "lua", "open", conf.agent_pool)

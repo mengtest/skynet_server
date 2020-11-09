@@ -17,8 +17,6 @@ local handler = base_handler.new(REQUEST)
 
 handler:init(
     function()
-        db_mgr = cluster.proxy("db", "@db_mgr")
-        name_check = cluster.proxy("db", "@name_check")
         map_mgr = skynet.uniqueservice("map_mgr")
     end
 )
@@ -32,6 +30,9 @@ handler:release(
 )
 
 local function load_role_list(user)
+    if db_mgr == nil then
+        db_mgr = cluster.proxy("db", "@db_mgr")
+    end
     local list = skynet.call(db_mgr, "lua", "tbl_role", "get_list", user.account, user.region)
     if not list then
         list = {}
@@ -87,6 +88,9 @@ function REQUEST.role_create(user, args)
     end
 
     -- 检查名称的合法性
+    if name_check == nil then
+        name_check = cluster.proxy("db", "@name_check")
+    end
     local result = skynet.call(name_check, "lua", "name_check", args.name)
     if not result then
         log.debug("%s create role failed, name repeat!", user.account_name, args.name)

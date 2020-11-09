@@ -27,6 +27,7 @@ end
 
 function CMD.logout(source, user)
     user:logout()
+    users[user.account_name] = nil
 end
 
 function CMD.afk(source, user)
