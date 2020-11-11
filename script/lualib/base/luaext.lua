@@ -39,41 +39,6 @@ table.copy = function(t, nometa)
     return result
 end
 
--- 打印
-table.print = function(t)
-    local print_r_cache={}
-    local function sub_print_r(t,indent)
-        if (print_r_cache[tostring(t)]) then
-            print(indent.."*"..tostring(t))
-        else
-            print_r_cache[tostring(t)]=true
-            if (type(t)=="table") then
-                for pos,val in pairs(t) do
-                    if (type(val)=="table") then
-                        print(indent.."["..pos.."] => "..tostring(t).." {")
-                        sub_print_r(val,indent..string.rep(" ",string.len(pos)+8))
-                        print(indent..string.rep(" ",string.len(pos)+6).."}")
-                    elseif (type(val)=="string") then
-                        print(indent.."["..pos..'] => "'..val..'"')
-                    else
-                        print(indent.."["..pos.."] => "..tostring(val))
-                    end
-                end
-            else
-                print(indent..tostring(t))
-            end
-        end
-    end
-    if (type(t)=="table") then
-        print(tostring(t).." {")
-        sub_print_r(t,"  ")
-        print("}")
-    else
-        sub_print_r(t,"  ")
-    end
-    print()
-end
-
 ----string
 string.split =
     function(s, delim)
@@ -101,4 +66,93 @@ end
 
 string.trim = function(s, c)
     return string.rtrim(string.ltrim(s, c), c)
+end
+
+local function l_dump(tab, _tostring)
+    _tostring = _tostring and _tostring or tostring
+
+    local function getkey(k, ktype)
+        if ktype == 'number' then
+            return '[' .. k .. ']'
+        elseif ktype == 'string' then
+            return '["' .. k .. '"]'
+        else
+            return '[' .. _tostring(k) .. ']'  --key可能是table
+        end
+    end
+
+    local tinsert = table.insert
+    local mmax = math.max
+    local rep = string.rep
+    local gsub = string.gsub
+    local format = string.format
+
+    local function dump_obj(obj, key, sp, lv, st)
+        local sp = '\t'
+
+        if type(obj) ~= 'table' then
+            return sp .. (key or '') .. ' = ' .. tostring(obj) .. '\n'
+        end
+
+        local ks, vs, s= { mxl = 0 }, {}
+        lv, st =  lv or 1, st or {}
+
+        st[obj] = key or '.' --table对象列表
+        key = key or ''
+        for k, v in pairs(obj) do
+            local ktype, vtype = type(k), type(v)
+            if k ~= 'class' and k ~= '__index' and vtype ~= 'function'then
+                if vtype == 'table' then
+                    if st[v] then --相互引用的table，直接输出
+                        vs[#vs + 1] = '[' .. st[v] .. ']'
+                        s = sp:rep(lv) .. getkey(k, ktype)
+                        tinsert(ks, s)
+                        ks.mxl = mmax(#s, ks.mxl)
+                    else
+                        st[v] = key .. '.' .. _tostring(k) --保存dump过的table，key可能也是table
+                        vs[#vs + 1] = dump_obj(v, st[v], sp, lv + 1, st)
+                        s = sp:rep(lv) .. getkey(k, ktype)
+                        tinsert(ks, s)
+                        ks.mxl = mmax(#s, ks.mxl)
+                    end
+                else
+                    if vtype == 'string' then
+                        vs[#vs + 1] = (('%q'):format(v):gsub('\\\10','\\n'):gsub('\\r\\n', '\\n'))
+                    else
+                        vs[#vs + 1] = tostring(v)
+                    end
+                    s = sp:rep(lv) .. getkey(k, ktype)
+                    tinsert(ks, s)
+                    ks.mxl = mmax(#s, ks.mxl);
+                end
+            else
+                vs[#vs + 1] = _tostring(v)
+                s = sp:rep(lv) .. getkey(k, ktype)
+                tinsert(ks, s)
+                ks.mxl = mmax(#s, ks.mxl)
+            end
+        end
+
+        s = ks.mxl
+        for i, v in ipairs(ks) do
+            vs[i] = v .. (' '):rep(s - #v) .. ' = ' .. vs[i] .. '\n'
+        end
+
+        return '{\n' .. table.concat(vs) .. sp:rep(lv-1) .. '}'
+    end
+
+    return dump_obj(tab)
+end
+
+sys_tostring = tostring
+
+do
+    local _tostring = tostring
+    tostring = function(v)
+        if type(v) == 'table' then
+            return l_dump(v, _tostring)
+        else
+            return _tostring(v)
+        end
+    end
 end

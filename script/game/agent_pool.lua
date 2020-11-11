@@ -12,10 +12,15 @@ local gated
 local add_count
 local check_thread
 
+local function new_agent()
+    local t = {agent = skynet.newservice("msgagent", gated), user_count = user_count}
+    return t
+end
+
 local function chech_agent_pool()
     local count = 0
     while #agent_pool <= add_count do
-        table.insert(agent_pool, {agent = skynet.newservice("msgagent", gated), user_count = user_count})
+        table.insert(agent_pool, new_agent())
         count = count + 1
         if count == 10 then
             skynet.sleep(10)
@@ -47,7 +52,7 @@ function CMD.open(pool_count, user_count, gate)
     gated = gate
     add_count = pool_count / 2
     for _ = 1, pool_count do
-        table.insert(agent_pool, {agent = skynet.newservice("msgagent", gated), user_count = user_count})
+        table.insert(agent_pool, new_agent())
     end
     skynet.fork(chech_agent_pool)
 end

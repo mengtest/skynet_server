@@ -45,7 +45,7 @@ function CMD.execute(sql, write)
 end
 
 function CMD.close()
-    log.notice("close mysqlpoll...")
+    log.notice("close mysql poll...")
     center:disconnect()
     center = nil
     for _, db in pairs(group) do
