@@ -1,8 +1,6 @@
-local service = require "service"
+local skynet = require "skynet"
 local sharetable = require "skynet.sharetable"
 local file = require "file"
-
-local CMD = {}
 
 local function init()
     local files = file.get_files_name("game_config")
@@ -11,7 +9,8 @@ local function init()
     end
 end
 
-service.init {
-    command = CMD,
-    init = init
-}
+skynet.start(
+    function()
+        init()
+    end
+)

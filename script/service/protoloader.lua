@@ -1,4 +1,4 @@
-local service = require "service"
+local skynet = require "skynet"
 local sprotoparser = require "sprotoparser"
 local sprotoloader = require "sprotoloader"
 local log = require "syslog"
@@ -19,6 +19,8 @@ local function init()
     end
 end
 
-service.init {
-    init = init
-}
+skynet.start(
+    function()
+        init()
+    end
+)

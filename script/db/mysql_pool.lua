@@ -1,4 +1,4 @@
-local service = require "service"
+local skynet = require "skynet"
 local mysql = require "skynet.db.mysql"
 local config = require "service_config.mysql_conf"
 local log = require "syslog"
@@ -54,6 +54,9 @@ function CMD.close()
     group = {}
 end
 
-service.init {
-    command = CMD
-}
+skynet.start(function()
+    skynet.dispatch("lua", function(session, source, command, ...)
+        local f = assert(CMD[command])
+        skynet.ret(skynet.pack(f(...)))
+    end)
+end)

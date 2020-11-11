@@ -1,4 +1,4 @@
-local service = require "service"
+local skynet = require "skynet"
 local redis = require "skynet.db.redis"
 local config = require "service_config.redis_conf"
 local log = require "syslog"
@@ -143,6 +143,9 @@ function CMD.del(uid, key)
     return result
 end
 
-service.init {
-    command = CMD
-}
+skynet.start(function()
+    skynet.dispatch("lua", function(session, source, command, ...)
+        local f = assert(CMD[command])
+        skynet.ret(skynet.pack(f(...)))
+    end)
+end)

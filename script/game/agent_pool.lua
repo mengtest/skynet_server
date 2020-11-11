@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local service = require "service"
 local log = require "syslog"
 local util = require "util"
 local set_timeout = util.set_timeout
@@ -61,6 +60,9 @@ function CMD.close()
     log.notice("close agent_pool...")
 end
 
-service.init {
-    command = CMD
-}
+skynet.start(function()
+    skynet.dispatch("lua", function(session, source, command, ...)
+        local f = assert(CMD[command])
+        skynet.ret(skynet.pack(f(...)))
+    end)
+end)

@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local service = require "service"
 local log = require "syslog"
 local uuid = require "uuid"
 

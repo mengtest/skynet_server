@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-local service = require "service"
 local log = require "syslog"
 
 local CMD = {}
@@ -35,6 +34,9 @@ function CMD.close()
     end
 end
 
-service.init {
-    command = CMD
-}
+skynet.start(function()
+    skynet.dispatch("lua", function(session, source, command, ...)
+        local f = assert(CMD[command])
+        skynet.ret(skynet.pack(f(...)))
+    end)
+end)
