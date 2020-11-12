@@ -6,7 +6,6 @@ local base_cmd = require "base_cmd"
 
 local CMD = base_cmd:new("agent_pool")
 local agent_pool = {}
-local pool_count
 local user_count
 local gated
 local add_count
@@ -46,9 +45,8 @@ function CMD.get_agent_address()
     return agent
 end
 
-function CMD.open(pool_count, user_count, gate)
-    pool_count = pool_count
-    user_count = user_count
+function CMD.open(pool_count, u_count, gate)
+    user_count = u_count
     gated = gate
     add_count = pool_count / 2
     for _ = 1, pool_count do
