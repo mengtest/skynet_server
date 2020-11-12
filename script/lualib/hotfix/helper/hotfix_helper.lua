@@ -5,7 +5,8 @@ local M = { }
 
 local lfs = require("lfs")
 local hotfix = require("hotfix.hotfix")
-local codecache = require "skynet.codecache"
+local skynet = require "skynet"
+local log = require "syslog"
 
 -- Map file path to file time to detect modification.
 local path_to_time = { }
@@ -52,6 +53,7 @@ local global_objects = {
     xpcall,
 }
 
+local hotfix_addr
 --- Check modules and hotfix.
 function M.check()
     local MOD_NAME = "hotfix.helper.hotfix_module_names"
@@ -64,7 +66,7 @@ function M.check()
         local path, err = package.searchpath(module_name, package.path)
         -- Skip non-exist module.
         if not path then
-            print(string.format("No such module: %s. %s", module_name, err))
+            log.warning("No such module: %s. %s", module_name, err)
             goto continue
         end
 
@@ -77,21 +79,27 @@ function M.check()
         local file_time = lfs.attributes (path, "modification")
         if file_time == path_to_time[path] then goto continue end
 
-        print(string.format("Hot fix module %s (%s)", module_name, path))
         path_to_time[path] = file_time
 
         if is_need_clearcache then
-            codecache.clear()
+            if not hotfix_addr then
+                hotfix_addr = skynet.uniqueservice("hotfix")
+            end
+
+            skynet.call(hotfix_addr, "lua", "codecache", path, file_time)
             is_need_clearcache = false
         end
 
         hotfix.hotfix_module(module_name)
+        log.info("Hot fix module %s (%s)", module_name, path)
         ::continue::
     end  -- for
 end  -- check()
 
 function M.init()
-    hotfix.log_debug = function(s) print(s) end
+    hotfix.log_error = function(s) log.error(s) end
+    hotfix.log_info = function(s) log.info(s) end
+    hotfix.log_debug = function(s) log.debug(s) end
     hotfix.add_protect(global_objects)
 end
 

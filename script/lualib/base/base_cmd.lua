@@ -8,6 +8,7 @@ local base_cmd = class("base_cmd")
 local hotfix_check_thread
 
 function base_cmd.initialize()
+    hotfix_helper.init()
     skynet.fork(base_cmd.hotfix_check)
 end
 
