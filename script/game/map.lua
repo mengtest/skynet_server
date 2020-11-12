@@ -10,8 +10,9 @@ local base_map = require "map.base_map"
 local aoi_mgr = require "map.aoi_mgr"
 local monster_mgr = require "map.monster_mgr"
 local create_monster_mgr = require "map.create_monster_mgr"
+local base_cmd = require "base_cmd"
 
-local CMD = base_map.cmd()
+local CMD = base_cmd:new("map")
 local update_thread
 local config
 

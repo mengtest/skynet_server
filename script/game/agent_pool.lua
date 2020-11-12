@@ -2,8 +2,9 @@ local skynet = require "skynet"
 local log = require "syslog"
 local util = require "util"
 local set_timeout = util.set_timeout
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("agent_pool")
 local agent_pool = {}
 local pool_count
 local user_count

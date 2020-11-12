@@ -2,9 +2,10 @@ local msgserver = require "snax.msgserver"
 local skynet = require "skynet"
 local log = require "syslog"
 local cluster = require "skynet.cluster"
+local base_cmd = require "base_cmd"
 
+local server = base_cmd:new("server")
 local loginservice
-local server = {}
 local users = {}
 local username_map = {}
 local internal_id = 0

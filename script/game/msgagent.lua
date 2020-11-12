@@ -4,9 +4,10 @@ local cluster = require "skynet.cluster"
 local msg_sender = require "msg_sender"
 local log = require "syslog"
 local register_handler = require "agent.register_handler"
+local base_cmd = require "base_cmd"
 
+local CMD = base_cmd:new("msgagent")
 local gate = tonumber(...)
-local CMD = {}
 local REQUEST = {}
 local users = {}
 local host

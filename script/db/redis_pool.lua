@@ -2,8 +2,9 @@ local skynet = require "skynet"
 local redis = require "skynet.db.redis"
 local config = require "service_config.redis_conf"
 local log = require "syslog"
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("redis_pool")
 local center
 local group = {}
 local ngroup

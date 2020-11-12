@@ -2,8 +2,9 @@ local skynet = require "skynet"
 local mysql = require "skynet.db.mysql"
 local config = require "service_config.mysql_conf"
 local log = require "syslog"
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("mysql_pool")
 local center
 local group = {}
 local ngroup

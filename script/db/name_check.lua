@@ -1,7 +1,8 @@
 local skynet = require "skynet"
 local log = require "syslog"
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("name_check")
 local usename = {}
 
 -- 检查角色名是否重复

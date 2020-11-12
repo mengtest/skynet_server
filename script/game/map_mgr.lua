@@ -1,8 +1,9 @@
 local skynet = require "skynet"
 local log = require "syslog"
 local sharetable = require "skynet.sharetable"
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("map_mgr")
 local map_instance = {}
 
 -- 获取地图地址

@@ -1,8 +1,9 @@
 local skynet = require "skynet"
 local log = require "syslog"
+local base_cmd = require "base_cmd"
 
+local CMD = base_cmd:new("db_sync")
 local queue = {}
-local CMD = {}
 local mysql_pool
 
 local traceback = debug.traceback

@@ -1,7 +1,8 @@
 local skynet = require "skynet"
 local log = require "syslog"
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("instance_mgr")
 local instance_pool = {}
 local max_temp_id = 65535
 

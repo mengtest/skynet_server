@@ -4,8 +4,9 @@ local mysql_conf = require "service_config.mysql_conf"
 local tbl_account = require "db.tbl_account"
 local tbl_role = require "db.tbl_role"
 local log = require "syslog"
+local base_cmd = require "base_cmd"
 
-local CMD = {}
+local CMD = base_cmd:new("db_mgr")
 local MODULE = {}
 local service = {}
 local servername = {
