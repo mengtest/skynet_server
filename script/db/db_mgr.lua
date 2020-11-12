@@ -140,14 +140,13 @@ local function get_order(primary_keys, order)
 end
 
 -- 拼接条件串
-local function get_primary_key_where(tbname, where)
+local function get_where_sql(tbname, where)
     local t = {}
-    for k,v in pairs(schema[tbname]["primary_keys"]) do
-        assert(where[v])
-        t[#t + 1] = v
+    for k,v in pairs(where) do
+        t[#t + 1] = k
         t[#t + 1] = '='
         t[#t + 1] = "'"
-        t[#t + 1] = where[v]
+        t[#t + 1] = v
         t[#t + 1] = "'"
         t[#t + 1] = " and "
     end
@@ -202,7 +201,7 @@ function CMD.load_data_impl(config, where)
                 sql = string.format("select %s from %s order by %s limit %d, 1000", config.columns, tbname, order, offset)
             end
         else
-            local primary_key_where = get_primary_key_where(tbname, where)
+            local primary_key_where = get_where_sql(tbname, where)
             if not config.columns then
                 sql = string.format( "select * from %s where %s order by %s limit %d, 1000", tbname, primary_key_where, order, offset)
             else
@@ -456,7 +455,7 @@ function CMD.update(tbname, where, row, nosync)
         sql[#sql] = "'"
 
         sql[#sql + 1] = " where "
-        sql[#sql + 1] = get_primary_key_where(tbname, where)
+        sql[#sql + 1] = get_where_sql(tbname, where)
         
         skynet.call(service["db_sync"], "lua", "sync", table.concat(sql))
     end

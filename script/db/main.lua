@@ -12,6 +12,7 @@ skynet.start(
         -- 启动数据库
         local db_mgr = skynet.uniqueservice("db_mgr")
         skynet.call(db_mgr, "lua", "system", "open")
+        --skynet.call(db_mgr, "lua", "system", "test")
 
         local name_check = skynet.uniqueservice("name_check")
 
