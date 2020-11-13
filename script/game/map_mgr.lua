@@ -16,7 +16,6 @@ function CMD.open()
     for map_id, conf in pairs(mapdata) do
         local m = skynet.newservice("map", conf.name)
         skynet.call(m, "lua", "open", conf)
-        skynet.call(m, "lua", "init", conf)
         map_instance[map_id] = m
     end
 end
@@ -29,14 +28,9 @@ function CMD.close()
     end
 end
 
-skynet.start(
-    function()
-        skynet.dispatch(
-            "lua",
-            function(_, source, command, ...)
-                local f = assert(CMD[command])
-                skynet.retpack(f(...))
-            end
-        )
-    end
-)
+skynet.start(function()
+    skynet.dispatch("lua", function(session, source, command, ...)
+        local f = assert(CMD[command])
+        skynet.ret(skynet.pack(f(...)))
+    end)
+end)

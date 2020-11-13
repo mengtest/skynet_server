@@ -82,7 +82,6 @@ local function launch_slave(auth_handler)
         if name == "handshake" then
             assert(args and args.clientkey, "invalid handshake request")
             clientkey = args.clientkey
-            skynet.error(string.format("[%s]", clientkey))
             if #clientkey ~= 8 then
                 error "Invalid client key"
             end

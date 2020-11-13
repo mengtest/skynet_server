@@ -16,7 +16,7 @@ local function new_agent()
     return t
 end
 
-local function chech_agent_pool()
+local function check_agent_pool()
     local count = 0
     while #agent_pool <= add_count do
         table.insert(agent_pool, new_agent())
@@ -27,7 +27,7 @@ local function chech_agent_pool()
         end
     end
     
-    check_thread = set_timeout(50, chech_agent_pool)
+    check_thread = set_timeout(50, check_agent_pool)
 end
 
 function CMD.get_agent_address()
@@ -52,7 +52,7 @@ function CMD.open(pool_count, u_count, gate)
     for _ = 1, pool_count do
         table.insert(agent_pool, new_agent())
     end
-    skynet.fork(chech_agent_pool)
+    skynet.fork(check_agent_pool)
 end
 
 function CMD.close()

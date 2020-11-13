@@ -499,24 +499,19 @@ end
 
 MODULE["system"] = system
 
-skynet.start(
-    function()
-        skynet.dispatch(
-            "lua",
-            function(_, _, cmd, subcmd, ...)
-                local m = MODULE[cmd]
-                if not m then
-                    log.notice("Unknown command : [%s]", cmd)
-                    skynet.response()(false)
-                end
-                local f = m[subcmd]
-                if f then
-                    skynet.ret(skynet.pack(f(...)))
-                else
-                    log.notice("Unknown sub command : [%s]", subcmd)
-                    skynet.response()(false)
-                end
-            end
-        )
-    end
-)
+skynet.start(function()
+    skynet.dispatch("lua", function(_, _, cmd, subcmd, ...)
+        local m = MODULE[cmd]
+        if not m then
+            log.notice("Unknown command : [%s]", cmd)
+            skynet.response()(false)
+        end
+        local f = m[subcmd]
+        if f then
+            skynet.ret(skynet.pack(f(...)))
+        else
+            log.notice("Unknown sub command : [%s]", subcmd)
+            skynet.response()(false)
+        end
+    end)
+end)

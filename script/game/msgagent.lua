@@ -7,19 +7,14 @@ local register_handler = require "agent.register_handler"
 local base_cmd = require "base_cmd"
 
 local CMD = base_cmd:new("msgagent")
-local gate = tonumber(...)
 local REQUEST = {}
 local users = {}
 local host
 
-local function account_name(account, region)
-    return string.format("%s@%d", account, region)
-end
-
 function CMD.login(source, account, region, subid, secret)
     log.notice("%s on %d is login", account, region)
-    local account_name = account_name(account, region)
-    users[account_name] = user:new(account, region, subid, secret, account_name)
+    local new_user = user:new(source, account, region, subid, secret)
+    users[new_user:get_account_name()] = new_user
 end
 
 function CMD.auth(source, user, fd)
@@ -66,13 +61,11 @@ local function handle_request(name, args, response, ud)
     end
 end
 
-skynet.init(
-    function()
-        msg_sender.init()
-        host = msg_sender.get_host()
-        register_handler:register(REQUEST, CMD)
-    end
-)
+skynet.init(function()
+    msg_sender.init()
+    host = msg_sender.get_host()
+    register_handler:register(REQUEST, CMD)
+end)
 
 skynet.register_protocol {
     name = "client",
@@ -92,15 +85,10 @@ skynet.register_protocol {
     end
 }
 
-skynet.start(
-    function()
-        skynet.dispatch(
-            "lua",
-            function(session, source, command, account_name, ...)
-                local f = assert(CMD[command], command)
-                local u = users[account_name] or account_name
-                skynet.ret(skynet.pack(f(source, u, ...)))
-            end
-        )
-    end
-)
+skynet.start(function()
+    skynet.dispatch("lua", function(session, source, command, account_name, ...)
+        local f = assert(CMD[command], command)
+        local u = users[account_name] or account_name
+        skynet.ret(skynet.pack(f(source, u, ...)))
+    end)
+end)

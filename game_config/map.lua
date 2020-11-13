@@ -1,43 +1,33 @@
 local map = {
     {
-        name = "main",
-        max_temp_id = 65535
+        name = "main"
     },
     {
-        name = "second",
-        max_temp_id = 65535
+        name = "second"
     },
     {
-        name = "three",
-        max_temp_id = 65535
+        name = "three"
     },
     {
-        name = "four",
-        max_temp_id = 65535
+        name = "four"
     },
     {
-        name = "five",
-        max_temp_id = 65535
+        name = "five"
     },
     {
-        name = "six",
-        max_temp_id = 65535
+        name = "six"
     },
     {
-        name = "seven",
-        max_temp_id = 65535
+        name = "seven"
     },
     {
-        name = "eight",
-        max_temp_id = 65535
+        name = "eight"
     },
     {
-        name = "nine",
-        max_temp_id = 65535
+        name = "nine"
     },
     {
-        name = "ten",
-        max_temp_id = 65535
+        name = "ten"
     },
 }
 

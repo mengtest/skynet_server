@@ -130,12 +130,8 @@ return setmetatable(_id_mgr, s_method)
 local id_mgr = {}
 
 local id = 1
-local max = 1
+local max = 2147483647
 local pool = {}
--- 设置最大id
-function id_mgr.set_max_id(_id)
-    max = _id
-end
 
 -- 分配一个id
 function id_mgr.create_id()
