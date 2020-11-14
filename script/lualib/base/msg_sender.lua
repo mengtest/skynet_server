@@ -4,10 +4,9 @@ local sprotoloader = require "sprotoloader"
 local socketdriver = require "skynet.socketdriver"
 local string = string
 
+local host = sprotoloader.load(1):host "package"
+local request = host:attach(sprotoloader.load(2))
 local msg_sender = {}
-
-local host
-local request
 
 local function message_package(name, args)
     local str = request(name, args)
@@ -41,11 +40,6 @@ end
 
 function msg_sender.get_host()
     return host
-end
-
-function msg_sender.init()
-    host = sprotoloader.load(1):host "package"
-    request = host:attach(sprotoloader.load(2))
 end
 
 return msg_sender

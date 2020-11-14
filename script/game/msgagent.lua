@@ -9,7 +9,7 @@ local base_cmd = require "base_cmd"
 local CMD = base_cmd:new("msgagent")
 local REQUEST = {}
 local users = {}
-local host
+local host = msg_sender.get_host()
 
 function CMD.login(source, account, region, subid, secret)
     log.notice("%s on %d is login", account, region)
@@ -62,8 +62,6 @@ local function handle_request(name, args, response, ud)
 end
 
 skynet.init(function()
-    msg_sender.init()
-    host = msg_sender.get_host()
     register_handler:register(REQUEST, CMD)
 end)
 
