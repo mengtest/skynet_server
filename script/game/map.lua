@@ -26,22 +26,6 @@ function CMD.close()
     update_thread()
 end
 
-skynet.register_protocol {
-    name = "text",
-    id = skynet.PTYPE_TEXT,
-    pack = function(text)
-        return text
-    end,
-    unpack = function(buf, sz)
-        return skynet.tostring(buf, sz)
-    end,
-    dispatch = function(session, source, cmd)
-        local t = cmd:split(" ")
-        local f = assert(CMD[t[1]], "[" .. cmd .. "]")
-        f(tonumber(t[2]), tonumber(t[3]))
-    end
-}
-
 skynet.start(function()
     skynet.dispatch("lua", function(session, source, command, ...)
         local f = assert(CMD[command], command)
