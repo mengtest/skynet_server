@@ -5,7 +5,7 @@
 }
 
 .role_overview{
-	uuid 0 : integer
+	uuid 0 : string
 	level 1 : integer
 	job 2 : integer
 	sex 3 : integer
@@ -41,7 +41,7 @@ ping 1 {
 # 发送auth后返回subid通知是否成功，成功的话使用其中的ip和端口去连game
 # login
 
-#握手
+# 握手
 handshake 2 {
 	request {
 		# clientkey = crypt.randomkey()
@@ -62,7 +62,7 @@ challenge 3 {
 	}
 }
 
-#账号认证
+# 账号认证
 auth 4 {
 	request {
 		# secret = crypt.dhsecret(serverkey, clientkey)
@@ -70,7 +70,7 @@ auth 4 {
 	}
 }
 
-#登录game
+# 登录game
 login 5 {
 	request {
 		username 0 : string # account@server#subid:region
@@ -82,76 +82,38 @@ login 5 {
 	}
 }
 
-#获取角色列表
+# 获取角色列表
 get_role_list 6 {
+	request {}
 	response {
-		#(uuid) is optional, means role_overview.uuid is main index.
+		#(uuid) 是可选的，代表role_overview.uuid是主index
 		role 0 : *role_overview(uuid)
 	}
 }
 
-#请求创建角色
+# 请求创建角色
 role_create 7 {
-	request {
-		name 0 : string
-		job 1 : integer
-		sex 2 : integer
-	}
+	request {}
 	response {
 		role 0 : role_overview
 	}
 }
 
-#选择角色
+# 选择角色
 role_pick 8{
 	request {
-		uuid 0 : integer
+		uuid 0 : string
 	}
 	response {
 		ok 0 : boolean
-        temp_id 1 : integer
+        data 1 : string
 	}
 }
 
-#加载地图完毕
-map_ready 9{
-	response {
-		ok 0 : boolean
-	}
-}
-
-#移动
-moveto 10{
+# 保存数据
+save_data 9{
 	request {
-		pos 0 : role_pos
-	}
-	response {
-		pos 0 : role_pos
-	}
-}
-
-#退出游戏
-quit_game 11{
-	response {
-		ok 0 : boolean
-	}
-}
-
-#切换地图
-change_map 12{
-	request {
-		map_id 0 : integer
-	}
-	response {
-		ok 0 : boolean
-        temp_id 1 : integer
-	}
-}
-
-#进入副本
-enter_instance 13{
-	request {
-		instance_id 0 : integer
+		data 0 : string
 	}
 	response {
 		ok 0 : boolean

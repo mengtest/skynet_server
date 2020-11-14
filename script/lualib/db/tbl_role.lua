@@ -25,9 +25,9 @@ function tbl_role.load(uuid)
     return list
 end
 
--- 保存角色信息
-function tbl_role.save(tbl_role)
-    return db_mgr_cmd.update("tbl_role", tbl_role)
+-- 更新角色信息
+function tbl_role.update(uuid, row)
+    return db_mgr_cmd.update("tbl_role", {uuid = uuid}, nil, row)
 end
 
 -- 创建角色信息

@@ -53,7 +53,7 @@ function REQUEST.get_role_list(user)
     }
 end
 
-local function create(account, region, name, job, sex)
+local function create(account, region)
     local datetime = os.date("%Y-%m-%d %H:%M:%S")
     local role = {
         uuid = uuid.gen(),
@@ -61,9 +61,7 @@ local function create(account, region, name, job, sex)
         region = region,
         create_time = datetime,
         login_time = datetime,
-        name = name,
-        sex = sex,
-        data = packer.pack({})
+        data = packer.pack("")
     }
 
     return role
@@ -71,35 +69,14 @@ end
 
 -- 创建角色
 function REQUEST.role_create(user, args)
-    if table.size(load_role_list(user)) >= 3 then
-        log.debug("%s create role failed, role num >= 3!", user.account_name)
+    if table.size(load_role_list(user)) >= 1 then
+        log.debug("%s create role failed, role num >= 1!", user.account_name)
         return {
             role = nil
         }
     end
 
-    -- 选择职业
-    local jobdata = sharetable.query "job"
-    if jobdata[args.job] == nil then
-        log.debug("%s create role failed, job error!", user.account_name)
-        return {
-            role = nil
-        }
-    end
-
-    -- 检查名称的合法性
-    if name_check == nil then
-        name_check = cluster.proxy("db", "@name_check")
-    end
-    local result = skynet.call(name_check, "lua", "name_check", args.name)
-    if not result then
-        log.debug("%s create role failed, name repeat!", user.account_name, args.name)
-        return {
-            role = nil
-        }
-    end
-    
-    local role = create(user.account, user.region, args.name, args.job, args.sex)
+    local role = create(user.account, user.region)
     if skynet.call(db_mgr, "lua", "tbl_role", "create", role) then
         user.role_list[role.uuid] = true
         log.debug("%s create role succ!", user.account_name)
@@ -112,51 +89,28 @@ function REQUEST.role_create(user, args)
     }
 end
 
--- 初始化角色信息
-local function init_user_data(user, dbdata)
-    local new_role = role:new(dbdata.name, dbdata.job, dbdata.sex, dbdata.level,
-     dbdata.uuid, dbdata.account, dbdata.region, dbdata.create_time, dbdata.login_time)
-    user.set_role(new_role)
-    new_role:set_data(packer.unpack(dbdata.data))
-end
-
 -- 选择角色
 function REQUEST.role_pick(user, args)
-    local ret = false
+    args.uuid = tonumber(args.uuid)
     if user.role_list[args.uuid] == nil then
         log.debug("%s pick role failed!", user.account_name)
-        return {ok = ret}
+        return {ok = false}
     end
-
-    local list = skynet.call(db_mgr, "lua", "tbl_role", "load", args.uuid)
-    if list.uuid then
-        log.debug("%s pick role[%s] succ!", user.account_name, list.name)
+    local new_role = role:new()
+    if new_role:load(args.uuid) then
+        user:set_role(new_role)
         user.role_list = nil
-        init_user_data(user, list)
-        --local map_address = skynet.call(map_mgr, "lua", "get_map_address_by_id", user.role:get_map_id())
-        --local temp_id
-        --if map_address ~= nil then
-        --    temp_id = skynet.call(map_address, "lua", "get_temp_id")
-        --    if temp_id > 0 then
-        --        user.role:set_aoi_mode("w")
-        --        user.role:set_map_address(map_address)
-        --        user.role:set_temp_id(temp_id)
-        --        log.debug("enter map and set temp_id:" .. user.role:get_temp_id())
-        --    else
-        --        log.debug("role enter map failed:" .. user.role:get_map_id())
-        --    end
-        --else
-        --    log.debug("role get map address failed:" .. user.role:get_map_id())
-        --end
-        return {
-            ok = ret,
-            temp_id = temp_id
-        }
+        return {ok = true, data = new_role.data}
     else
-        return {
-            ok = ret
-        }
+        return {ok = false}
     end
+end
+
+function REQUEST.save_data(user, args)
+    local role = user:get_role()
+    role:set_data(args.data)
+    role:save()
+    return {ok = true}
 end
 
 return handler

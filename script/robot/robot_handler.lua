@@ -119,6 +119,11 @@ local function role_pick(self, uuid)
     )
 end
 
+local function save_data(self)
+    log.error("send save_data")
+    self:send_request("save_data", {data = self.name})
+end
+
 local function map_ready(self)
     log.error("send map_ready")
     self:send_request("map_ready")
@@ -172,16 +177,14 @@ function RESPONSE:get_role_list(args)
         local uuid = 0
         local bpick = false
         for k, v in pairs(args.role) do
-            if v.name == self.name then
-                uuid = k
-                role_pick(self, uuid)
-                bpick = true
-                break
-            end
+            uuid = k
+            role_pick(self, uuid)
+            bpick = true
+            break
         end
         if not bpick then
             for k, v in pairs(args.role) do
-                log.error("get_role_list size > 1:"..self.name.." "..v.name)
+                log.error("get_role_list size > 1:")
             end
             
             --role_create(self)
@@ -195,8 +198,12 @@ function RESPONSE:role_create(args)
 end
 
 function RESPONSE:role_pick(args)
-    log.debug("role_pick ret temp_id: " .. args.temp_id)
-    map_ready(self)
+    log.debug("role_pick ret ok:%s data:%s", tostring(args.ok), tostring(args.data))
+    save_data(self)
+end
+
+function RESPONSE:save_data(args)
+    log.debug("save_data ret ok:%s", tostring(args.ok))
 end
 
 function RESPONSE:map_ready(args)

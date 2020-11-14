@@ -116,12 +116,16 @@ local function make_redis_key(tbname, key, row)
     t[#t + 1] = tbname
     t[#t + 1] = ':'
     
-    for k,v in pairs(key) do
-        assert(row[v])
-        t[#t + 1] = row[v]
-        t[#t + 1] = ':'
+    if #key > 0 then
+        for k,v in pairs(key) do
+            assert(row[v], tbname .. ":" .. v)
+            t[#t + 1] = row[v]
+            t[#t + 1] = ':'
+        end
+        t[#t] = nil
+    else
+        t[#t + 1] = '*'
     end
-    t[#t] = nil
 
     return table.concat(t)
 end
@@ -424,14 +428,14 @@ function CMD.insert(tbname, row, immed, nosync)
     return true
 end
 
--- 表名，条件，列名，不同步到数据库
-function CMD.update(tbname, where, row, nosync)
+-- 表名，条件，集合key，列名，不同步到数据库
+function CMD.update(tbname, where, index, row, nosync)
     assert(row)
     local config = db_tbl_config[tbname]
     local redis_key = make_redis_key(tbname, config.redis_key, where)
     do_redis({"hmset", redis_key, row})
-    if config.index_key then
-        local index_key = make_redis_key(tbname, config.index_key, where)
+    if config.index_key && config.index_value then
+        local index_key = make_redis_key(tbname, config.index_key, index)
         local index_value = 0
         if config.index_value then
             index_value = row[config.index_value]

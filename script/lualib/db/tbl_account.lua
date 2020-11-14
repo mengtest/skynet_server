@@ -16,7 +16,7 @@ function tbl_account.auth(account, region, password)
     if result and result.region == region and result.account == account then
         local row = {}
         row.login_time = os.date("%Y-%m-%d %H:%M:%S")
-        db_mgr_cmd.update("tbl_account", {account = account, region = region}, row)
+        db_mgr_cmd.update("tbl_account", {account = account, region = region}, nil, row)
         log.debug("tbl_account:%s update login time", account)
     else
         log.debug("add tbl_account:%s to redis and mysql", account)
