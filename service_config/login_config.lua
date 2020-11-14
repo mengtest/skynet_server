@@ -15,6 +15,7 @@ function config:initialize(login_ip_config)
     self.multilogin = false -- disallow multilogin
     self.name = "login_master"
     self.instance = 8
+    base_cmd.initialize()
 end
 
 local login_server = config:new(login_ip_config)
