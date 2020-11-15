@@ -434,7 +434,7 @@ function CMD.update(tbname, where, index, row, nosync)
     local config = db_tbl_config[tbname]
     local redis_key = make_redis_key(tbname, config.redis_key, where)
     do_redis({"hmset", redis_key, row})
-    if config.index_key && config.index_value then
+    if config.index_key and config.index_value then
         local index_key = make_redis_key(tbname, config.index_key, index)
         local index_value = 0
         if config.index_value then
