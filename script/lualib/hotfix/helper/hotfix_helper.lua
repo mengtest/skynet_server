@@ -81,6 +81,11 @@ function M.check()
 
         path_to_time[path] = file_time
 
+        if not package.loaded[module_name] then 
+            log.debug("Skip unloaded module: " .. module_name)
+            goto continue
+        end
+        
         if is_need_clearcache then
             if not hotfix_addr then
                 hotfix_addr = skynet.uniqueservice("hotfix")
