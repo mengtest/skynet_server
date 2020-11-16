@@ -3,7 +3,6 @@ local cluster = require "skynet.cluster"
 local base_handler = require "agent.base_handler"
 local log = require "base.syslog"
 local uuid = require "uuid"
-local sharetable = require "skynet.sharetable"
 local packer = require "db.packer"
 local role = require "obj.role"
 
