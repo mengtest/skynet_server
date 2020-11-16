@@ -7,26 +7,19 @@ local packer = require "db.packer"
 local role = require "obj.role"
 
 local db_mgr
-local map_mgr
 local name_check
 
 local REQUEST = {}
 
 local handler = base_handler.new(REQUEST)
 
-handler:init(
-    function()
-        map_mgr = skynet.uniqueservice("map_mgr")
-    end
-)
+handler:init(function()
+end)
 
-handler:release(
-    function()
-        db_mgr = nil
-        name_check = nil
-        map_mgr = nil
-    end
-)
+handler:release(function()
+    db_mgr = nil
+    name_check = nil
+end)
 
 local function load_role_list(user)
     if db_mgr == nil then

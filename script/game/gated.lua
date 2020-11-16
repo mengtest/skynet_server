@@ -11,7 +11,6 @@ local username_map = {}
 local internal_id = 0
 local agent_pool
 local servername
-local map_mgr
 local gate_ip
 local gate_port
 local region = 1
@@ -111,21 +110,18 @@ function server.register_handler(conf)
     gate_ip = assert(conf.public_address)
     gate_port = assert(conf.port)
     servername = assert(conf.servername)
-    map_mgr = skynet.uniqueservice("map_mgr")
-    skynet.call(map_mgr, "lua", "open")
     
     agent_pool = skynet.uniqueservice("agent_pool")
     skynet.call(agent_pool, "lua", "open", conf.agent_pool, conf.agent_user_count, skynet.self())
-
-    local instance_mgr = skynet.uniqueservice("instance_mgr")
-    skynet.call(instance_mgr, "lua", "open", conf.agent_pool)
+    
+    local battle_mgr = skynet.uniqueservice("battle_mgr")
+    skynet.call(battle_mgr, "lua", "open", conf.battle_pool)
 end
 
 -- 退出服务
 function server.close_handler()
     log.notice("close gated...")
     -- 这边通知所有服务退出
-    skynet.call(map_mgr, "lua", "close")
 end
 
 -- 向msgserver注册前面server中定义的方法

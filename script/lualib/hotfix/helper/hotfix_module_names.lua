@@ -4,7 +4,6 @@
 
 local hotfix_module_names = {
   "hotfix.helper.hotfix_module_names",
-  "base_cmd",
 }
 
 return hotfix_module_names

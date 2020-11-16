@@ -5,7 +5,7 @@ local base_debug_port = 9000
 
 ip_config.mysql = {
     center = {
-        host = "192.168.10.91",
+        host = "127.0.0.1",
         port = 3306
     },
     group = {
@@ -16,7 +16,7 @@ ip_config.mysql = {
 
 ip_config.redis = {
     center = {
-        host = "192.168.10.91",
+        host = "127.0.0.1",
         port = 6379,
     },
     group = {
@@ -41,14 +41,14 @@ ip_config.game = {
         debug_address = "0.0.0.0",
         debug_port = 9002,
         address = "0.0.0.0",        -- server监听地址
-        public_address = "192.168.10.91",   -- client连接地址
+        public_address = "192.168.100.233",   -- client连接地址
         port = 8547,
     },
     game1 = {
         debug_address = "0.0.0.0",
         debug_port = 9003,
         address = "0.0.0.0",
-        public_address = "192.168.10.91",
+        public_address = "192.168.100.233",
         port = 8548,
     }
 }

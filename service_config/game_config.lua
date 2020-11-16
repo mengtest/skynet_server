@@ -16,7 +16,8 @@ config = {
         nodelay = true,                                         -- TCP nodelay
         servername = "game0",                                   -- game名称
         agent_pool = 10,                                        -- 预启动agent数量
-        agent_user_count = 2                                    -- 单个agent服务玩家数量
+        agent_user_count = 2,                                   -- 单个agent服务玩家数量
+        battle_pool = 10,                                       -- 预启动battle数量
     },
     game1 = {
         debug_address = game_ip_config.game0.debug_address,
@@ -29,7 +30,8 @@ config = {
         nodelay = true,
         servername = "game1",
         agent_pool = 10,
-        agent_user_count = 2
+        agent_user_count = 2,
+        battle_pool = 10,
     }
 }
 
