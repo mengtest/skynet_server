@@ -1,3 +1,7 @@
+## Notice
+经过一段时间的开发，最新版本已经和当前版本差异极大，例如架构调整、数据库改用mongodb、不再使用docker技术、使用skynet_package处理消息包等等。  
+由于缺少经验，当前版本也有各式各样的已知问题，仅供参考。
+
 ## 编译
 1. Ubuntu`(需要自己配置mysql和redis)`
     1. 安装`autoconf`和`libreadline-dev`
